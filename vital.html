@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasta Vital Bulgu Takibi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .nav-menu {
+            background-color: #333;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .nav-menu a.active {
+            background-color: #4CAF50;
+        }
+        .nav-menu a:hover {
+            background-color: #555;
+        }
+        .input-group {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .input-group input {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .filter-group {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-menu">
+        <a href="index.html">Sıvı Takibi</a>
+        <a href="vital.html" class="active">Vital Bulgular</a>
+    </div>
+
+    <h1>Vital Bulgu Takibi</h1>
+
+    <div class="input-group">
+        <label for="systolic">Sistolik Tansiyon:</label>
+        <input type="number" id="systolic" min="0" max="300">
+        
+        <label for="diastolic">Diastolik Tansiyon:</label>
+        <input type="number" id="diastolic" min="0" max="200">
+        
+        <label for="pulse">Nabız:</label>
+        <input type="number" id="pulse" min="0" max="200">
+        
+        <button onclick="addVitalSigns()">Kaydet</button>
+    </div>
+
+    <div class="filter-group">
+        <label for="startDate">Başlangıç Tarihi:</label>
+        <input type="date" id="startDate">
+        
+        <label for="endDate">Bitiş Tarihi:</label>
+        <input type="date" id="endDate">
+        
+        <button onclick="filterData()">Filtrele</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="vitalChart"></canvas>
+    </div>
+
+    <script>
+        let vitalSigns = [];
+        let chart;
+
+        // Sayfa yüklendiğinde çalışacak
+        window.onload = function() {
+            // LocalStorage'dan verileri yükle
+            const savedData = localStorage.getItem('vitalSigns');
+            if (savedData) {
+                vitalSigns = JSON.parse(savedData);
+                updateChart();
+            }
+            
+            // Tarih filtrelerini bugüne ayarla
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+        };
+
+        function addVitalSigns() {
+            const systolic = parseInt(document.getElementById('systolic').value);
+            const diastolic = parseInt(document.getElementById('diastolic').value);
+            const pulse = parseInt(document.getElementById('pulse').value);
+
+            if (!systolic || !diastolic || !pulse) {
+                alert('Lütfen tüm değerleri giriniz!');
+                return;
+            }
+
+            const newData = {
+                time: new Date(),
+                systolic: systolic,
+                diastolic: diastolic,
+                pulse: pulse
+            };
+
+            vitalSigns.push(newData);
+            
+            // LocalStorage'a kaydet
+            localStorage.setItem('vitalSigns', JSON.stringify(vitalSigns));
+
+            // Inputları temizle
+            document.getElementById('systolic').value = '';
+            document.getElementById('diastolic').value = '';
+            document.getElementById('pulse').value = '';
+
+            updateChart();
+        }
+
+        function filterData() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            endDate.setHours(23, 59, 59); // Günün sonuna ayarla
+
+            const filteredData = vitalSigns.filter(data => {
+                const dataDate = new Date(data.time);
+                return dataDate >= startDate && dataDate <= endDate;
+            });
+
+            updateChart(filteredData);
+        }
+
+        function updateChart(data = vitalSigns) {
+            const ctx = document.getElementById('vitalChart').getContext('2d');
+            
+            // Eğer zaten bir grafik varsa yok et
+            if (chart) {
+                chart.destroy();
+            }
+
+            const labels = data.map(d => new Date(d.time).toLocaleString());
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sistolik',
+                            data: data.map(d => d.systolic),
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Diastolik',
+                            data: data.map(d => d.diastolic),
+                            borderColor: 'rgb(54, 162, 235)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Nabız',
+                            data: data.map(d => d.pulse),
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Vital Bulgular Grafiği'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

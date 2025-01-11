@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasta Sıvı Takip Sistemi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .column {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .water-column {
+            background-color: #e3f2fd;
+        }
+        .urine-column {
+            background-color: #fff3e0;
+        }
+        .urine-column button {
+            background-color: #FF9800;
+        }
+        .reset-button {
+            background-color: #f44336;
+            margin-top: 15px;
+            width: 100%;
+        }
+        .water-column .reset-button {
+            background-color: #2196F3;
+        }
+        .urine-column .reset-button {
+            background-color: #FF5722;
+        }
+        .nav-menu {
+            background-color: #333;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .nav-menu a.active {
+            background-color: #4CAF50;
+        }
+        .nav-menu a:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-menu">
+        <a href="index.html" class="active">Sıvı Takibi</a>
+        <a href="vital.html">Vital Bulgular</a>
+    </div>
+    <h1>Hasta Sıvı Takip Sistemi</h1>
+    
+    <div class="container">
+        <!-- Su Takip Sütunu -->
+        <div class="column water-column">
+            <h2>Su Tüketim Takibi</h2>
+            <div class="input-group">
+                <label for="waterAmount">Su Miktarı (ml):</label>
+                <input type="number" id="waterAmount" min="0">
+                <button onclick="addWaterConsumption()">Ekle</button>
+            </div>
+
+            <div class="summary">
+                <h3>Günlük Su Özeti</h3>
+                <p>06:00 - 15:00 arası toplam: <span id="morning">0</span> ml</p>
+                <p>15:00 - 23:00 arası toplam: <span id="afternoon">0</span> ml</p>
+                <p>23:00 - 06:00 arası toplam: <span id="night">0</span> ml</p>
+            </div>
+            <button onclick="resetData('water')" class="reset-button">Su Verilerini Sıfırla</button>
+        </div>
+
+        <!-- İdrar Takip Sütunu -->
+        <div class="column urine-column">
+            <h2>İdrar Takibi</h2>
+            <div class="input-group">
+                <label for="urineAmount">İdrar Miktarı (ml):</label>
+                <input type="number" id="urineAmount" min="0">
+                <button onclick="addUrineOutput()">Ekle</button>
+            </div>
+
+            <div class="summary">
+                <h3>Günlük İdrar Özeti</h3>
+                <p>06:00 - 15:00 arası toplam: <span id="urineMorning">0</span> ml</p>
+                <p>15:00 - 23:00 arası toplam: <span id="urineAfternoon">0</span> ml</p>
+                <p>23:00 - 06:00 arası toplam: <span id="urineNight">0</span> ml</p>
+            </div>
+            <button onclick="resetData('urine')" class="reset-button">İdrar Verilerini Sıfırla</button>
+        </div>
+    </div>
+
+    <script>
+        let consumptions = [];
+        let urineOutputs = [];
+
+        function addWaterConsumption() {
+            const amount = parseInt(document.getElementById('waterAmount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Lütfen geçerli bir miktar giriniz!');
+                return;
+            }
+
+            const now = new Date();
+            consumptions.push({
+                time: now,
+                amount: amount
+            });
+
+            updateWaterSummary();
+            document.getElementById('waterAmount').value = '';
+        }
+
+        function addUrineOutput() {
+            const amount = parseInt(document.getElementById('urineAmount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Lütfen geçerli bir miktar giriniz!');
+                return;
+            }
+
+            const now = new Date();
+            urineOutputs.push({
+                time: now,
+                amount: amount
+            });
+
+            updateUrineSummary();
+            document.getElementById('urineAmount').value = '';
+        }
+
+        function updateWaterSummary() {
+            const morning = calculatePeriodTotal(consumptions, 6, 15);
+            const afternoon = calculatePeriodTotal(consumptions, 15, 23);
+            const night = calculatePeriodTotal(consumptions, 23, 6);
+
+            document.getElementById('morning').textContent = morning;
+            document.getElementById('afternoon').textContent = afternoon;
+            document.getElementById('night').textContent = night;
+        }
+
+        function updateUrineSummary() {
+            const morning = calculatePeriodTotal(urineOutputs, 6, 15);
+            const afternoon = calculatePeriodTotal(urineOutputs, 15, 23);
+            const night = calculatePeriodTotal(urineOutputs, 23, 6);
+
+            document.getElementById('urineMorning').textContent = morning;
+            document.getElementById('urineAfternoon').textContent = afternoon;
+            document.getElementById('urineNight').textContent = night;
+        }
+
+        function calculatePeriodTotal(data, startHour, endHour) {
+            return data.reduce((total, item) => {
+                const hour = item.time.getHours();
+                
+                if (startHour < endHour) {
+                    if (hour >= startHour && hour < endHour) {
+                        return total + item.amount;
+                    }
+                } else {
+                    if (hour >= startHour || hour < endHour) {
+                        return total + item.amount;
+                    }
+                }
+                return total;
+            }, 0);
+        }
+
+        function resetData(type) {
+            const onay = confirm(`${type === 'water' ? 'Su' : 'İdrar'} verilerini sıfırlamak istediğinizden emin misiniz?`);
+            
+            if (onay) {
+                if (type === 'water') {
+                    consumptions = [];
+                    updateWaterSummary();
+                } else {
+                    urineOutputs = [];
+                    updateUrineSummary();
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
