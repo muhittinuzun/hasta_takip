@@ -23,20 +23,41 @@
         }
         .input-group {
             margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        button {
-            padding: 10px;
+        .input-group label {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .input-group input {
+            padding: 12px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .input-group button {
+            padding: 15px;
+            font-size: 1.1em;
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            width: 100%;
         }
         .summary {
             margin-top: 20px;
-            padding: 10px;
+            padding: 15px;
             background-color: #f0f0f0;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+        .summary h3 {
+            margin-top: 0;
+            color: #333;
         }
         .water-column {
             background-color: #e3f2fd;
@@ -48,9 +69,9 @@
             background-color: #FF9800;
         }
         .reset-button {
-            background-color: #f44336;
-            margin-top: 15px;
-            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            margin-top: 20px;
         }
         .water-column .reset-button {
             background-color: #2196F3;
@@ -77,12 +98,65 @@
         .nav-menu a:hover {
             background-color: #555;
         }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                margin: 0;
+            }
+            .container {
+                flex-direction: column;
+                gap: 30px;
+            }
+            .column {
+                margin-bottom: 20px;
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+                text-align: center;
+            }
+            h2 {
+                font-size: 1.3em;
+                text-align: center;
+            }
+            .nav-menu {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .nav-menu a {
+                padding: 12px 20px;
+                font-size: 1.1em;
+                text-align: center;
+                flex: 1;
+                min-width: 140px;
+            }
+            .input-group input {
+                padding: 15px;
+                font-size: 1.3em;
+            }
+            .input-group button {
+                padding: 18px;
+                font-size: 1.2em;
+            }
+            .summary {
+                padding: 20px;
+            }
+            .summary p {
+                margin: 15px 0;
+            }
+            button, input, .nav-menu a {
+                min-height: 44px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="nav-menu">
         <a href="index.html" class="active">Sıvı Takibi</a>
         <a href="vital.html">Vital Bulgular</a>
+        <a href="details.html">Detaylar</a>
     </div>
     <h1>Hasta Sıvı Takip Sistemi</h1>
     
@@ -97,10 +171,11 @@
             </div>
 
             <div class="summary">
-                <h3>Günlük Su Özeti</h3>
+                <h3>Günlük Su Özeti (Son 24 Saat)</h3>
                 <p>06:00 - 15:00 arası toplam: <span id="morning">0</span> ml</p>
                 <p>15:00 - 23:00 arası toplam: <span id="afternoon">0</span> ml</p>
                 <p>23:00 - 06:00 arası toplam: <span id="night">0</span> ml</p>
+                <p class="total">24 Saatlik Toplam: <span id="total24h">0</span> ml</p>
             </div>
             <button onclick="resetData('water')" class="reset-button">Su Verilerini Sıfırla</button>
         </div>
@@ -115,10 +190,11 @@
             </div>
 
             <div class="summary">
-                <h3>Günlük İdrar Özeti</h3>
+                <h3>Günlük İdrar Özeti (Son 24 Saat)</h3>
                 <p>06:00 - 15:00 arası toplam: <span id="urineMorning">0</span> ml</p>
                 <p>15:00 - 23:00 arası toplam: <span id="urineAfternoon">0</span> ml</p>
                 <p>23:00 - 06:00 arası toplam: <span id="urineNight">0</span> ml</p>
+                <p class="total">24 Saatlik Toplam: <span id="urineTotal24h">0</span> ml</p>
             </div>
             <button onclick="resetData('urine')" class="reset-button">İdrar Verilerini Sıfırla</button>
         </div>
@@ -127,6 +203,33 @@
     <script>
         let consumptions = [];
         let urineOutputs = [];
+
+        // Sayfa yüklendiğinde verileri yükle
+        window.onload = function() {
+            loadData();
+            updateWaterSummary();
+            updateUrineSummary();
+        };
+
+        // LocalStorage'dan verileri yükle
+        function loadData() {
+            const savedConsumptions = localStorage.getItem('waterConsumptions');
+            const savedUrineOutputs = localStorage.getItem('urineOutputs');
+            
+            if (savedConsumptions) {
+                consumptions = JSON.parse(savedConsumptions).map(item => ({
+                    ...item,
+                    time: new Date(item.time)
+                }));
+            }
+            
+            if (savedUrineOutputs) {
+                urineOutputs = JSON.parse(savedUrineOutputs).map(item => ({
+                    ...item,
+                    time: new Date(item.time)
+                }));
+            }
+        }
 
         function addWaterConsumption() {
             const amount = parseInt(document.getElementById('waterAmount').value);
@@ -140,6 +243,9 @@
                 time: now,
                 amount: amount
             });
+
+            // LocalStorage'a kaydet
+            localStorage.setItem('waterConsumptions', JSON.stringify(consumptions));
 
             updateWaterSummary();
             document.getElementById('waterAmount').value = '';
@@ -158,28 +264,43 @@
                 amount: amount
             });
 
+            // LocalStorage'a kaydet
+            localStorage.setItem('urineOutputs', JSON.stringify(urineOutputs));
+
             updateUrineSummary();
             document.getElementById('urineAmount').value = '';
         }
 
         function updateWaterSummary() {
-            const morning = calculatePeriodTotal(consumptions, 6, 15);
-            const afternoon = calculatePeriodTotal(consumptions, 15, 23);
-            const night = calculatePeriodTotal(consumptions, 23, 6);
+            // Son 24 saatlik verileri filtrele
+            const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const recentConsumptions = consumptions.filter(item => item.time > last24Hours);
+
+            const morning = calculatePeriodTotal(recentConsumptions, 6, 15);
+            const afternoon = calculatePeriodTotal(recentConsumptions, 15, 23);
+            const night = calculatePeriodTotal(recentConsumptions, 23, 6);
+            const total24h = morning + afternoon + night;
 
             document.getElementById('morning').textContent = morning;
             document.getElementById('afternoon').textContent = afternoon;
             document.getElementById('night').textContent = night;
+            document.getElementById('total24h').textContent = total24h;
         }
 
         function updateUrineSummary() {
-            const morning = calculatePeriodTotal(urineOutputs, 6, 15);
-            const afternoon = calculatePeriodTotal(urineOutputs, 15, 23);
-            const night = calculatePeriodTotal(urineOutputs, 23, 6);
+            // Son 24 saatlik verileri filtrele
+            const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const recentUrineOutputs = urineOutputs.filter(item => item.time > last24Hours);
+
+            const morning = calculatePeriodTotal(recentUrineOutputs, 6, 15);
+            const afternoon = calculatePeriodTotal(recentUrineOutputs, 15, 23);
+            const night = calculatePeriodTotal(recentUrineOutputs, 23, 6);
+            const total24h = morning + afternoon + night;
 
             document.getElementById('urineMorning').textContent = morning;
             document.getElementById('urineAfternoon').textContent = afternoon;
             document.getElementById('urineNight').textContent = night;
+            document.getElementById('urineTotal24h').textContent = total24h;
         }
 
         function calculatePeriodTotal(data, startHour, endHour) {
@@ -205,9 +326,11 @@
             if (onay) {
                 if (type === 'water') {
                     consumptions = [];
+                    localStorage.removeItem('waterConsumptions');
                     updateWaterSummary();
                 } else {
                     urineOutputs = [];
+                    localStorage.removeItem('urineOutputs');
                     updateUrineSummary();
                 }
             }

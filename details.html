@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sıvı Takibi Detayları</title>
+    <style>
+        /* index.html'deki stil kodlarını buraya da ekleyin */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .details-table th, .details-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #f5f5f5;
+        }
+        .details-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-menu">
+        <a href="index.html">Sıvı Takibi</a>
+        <a href="vital.html">Vital Bulgular</a>
+        <a href="details.html" class="active">Detaylar</a>
+    </div>
+
+    <h1>Sıvı Takibi Detayları</h1>
+
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Toplam Su (ml)</th>
+                <th>Toplam İdrar (ml)</th>
+            </tr>
+        </thead>
+        <tbody id="detailsBody"></tbody>
+    </table>
+
+    <script>
+        window.onload = function() {
+            loadAndDisplayDetails();
+        };
+
+        function loadAndDisplayDetails() {
+            // LocalStorage'dan verileri yükle
+            const consumptions = JSON.parse(localStorage.getItem('waterConsumptions') || '[]')
+                .map(item => ({ ...item, time: new Date(item.time) }));
+            const urineOutputs = JSON.parse(localStorage.getItem('urineOutputs') || '[]')
+                .map(item => ({ ...item, time: new Date(item.time) }));
+
+            // Tarihleri grupla
+            const dailyTotals = {};
+
+            // Su verilerini grupla
+            consumptions.forEach(item => {
+                const date = item.time.toLocaleDateString();
+                if (!dailyTotals[date]) {
+                    dailyTotals[date] = { water: 0, urine: 0 };
+                }
+                dailyTotals[date].water += item.amount;
+            });
+
+            // İdrar verilerini grupla
+            urineOutputs.forEach(item => {
+                const date = item.time.toLocaleDateString();
+                if (!dailyTotals[date]) {
+                    dailyTotals[date] = { water: 0, urine: 0 };
+                }
+                dailyTotals[date].urine += item.amount;
+            });
+
+            // Tabloyu oluştur
+            const tbody = document.getElementById('detailsBody');
+            tbody.innerHTML = '';
+
+            Object.entries(dailyTotals)
+                .sort((a, b) => new Date(b[0]) - new Date(a[0])) // Tarihe göre sırala (en yeni en üstte)
+                .forEach(([date, totals]) => {
+                    const row = tbody.insertRow();
+                    row.insertCell(0).textContent = date;
+                    row.insertCell(1).textContent = `${totals.water} ml`;
+                    row.insertCell(2).textContent = `${totals.urine} ml`;
+                });
+        }
+    </script>
+</body>
+</html> 
