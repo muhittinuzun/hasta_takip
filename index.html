@@ -50,14 +50,41 @@
         }
         .summary {
             margin-top: 20px;
-            padding: 15px;
-            background-color: #f0f0f0;
-            border-radius: 8px;
-            font-size: 1.1em;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .summary h3 {
-            margin-top: 0;
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            font-size: 1.2rem;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-label {
+            font-weight: bold;
             color: #333;
+        }
+        .summary-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .positive {
+            color: #4CAF50;
+        }
+        .negative {
+            color: #f44336;
+        }
+        .balance {
+            background-color: #e8f5e9;
+            margin-top: 20px;
+            border-radius: 12px;
+            padding: 20px;
         }
         .water-column {
             background-color: #e3f2fd;
@@ -171,11 +198,10 @@
             </div>
 
             <div class="summary">
-                <h3>Günlük Su Özeti (Son 24 Saat)</h3>
-                <p>06:00 - 15:00 arası toplam: <span id="morning">0</span> ml</p>
-                <p>15:00 - 23:00 arası toplam: <span id="afternoon">0</span> ml</p>
-                <p>23:00 - 06:00 arası toplam: <span id="night">0</span> ml</p>
-                <p class="total">24 Saatlik Toplam: <span id="total24h">0</span> ml</p>
+                <div class="summary-item">
+                    <span class="summary-label">Son 24 Saat Toplam Su:</span>
+                    <span class="summary-value" id="total24h">0 ml</span>
+                </div>
             </div>
             <button onclick="resetData('water')" class="reset-button">Su Verilerini Sıfırla</button>
         </div>
@@ -190,13 +216,19 @@
             </div>
 
             <div class="summary">
-                <h3>Günlük İdrar Özeti (Son 24 Saat)</h3>
-                <p>06:00 - 15:00 arası toplam: <span id="urineMorning">0</span> ml</p>
-                <p>15:00 - 23:00 arası toplam: <span id="urineAfternoon">0</span> ml</p>
-                <p>23:00 - 06:00 arası toplam: <span id="urineNight">0</span> ml</p>
-                <p class="total">24 Saatlik Toplam: <span id="urineTotal24h">0</span> ml</p>
+                <div class="summary-item">
+                    <span class="summary-label">Son 24 Saat Toplam İdrar:</span>
+                    <span class="summary-value" id="urineTotal24h">0 ml</span>
+                </div>
             </div>
             <button onclick="resetData('urine')" class="reset-button">İdrar Verilerini Sıfırla</button>
+        </div>
+    </div>
+
+    <div class="balance">
+        <div class="summary-item">
+            <span class="summary-label">Su-İdrar Dengesi:</span>
+            <span class="summary-value" id="balance">0 ml</span>
         </div>
     </div>
 
@@ -272,52 +304,42 @@
         }
 
         function updateWaterSummary() {
-            // Son 24 saatlik verileri filtrele
             const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const recentConsumptions = consumptions.filter(item => item.time > last24Hours);
+            const recentConsumptions = consumptions.filter(item => 
+                new Date(item.time) > last24Hours
+            );
 
-            const morning = calculatePeriodTotal(recentConsumptions, 6, 15);
-            const afternoon = calculatePeriodTotal(recentConsumptions, 15, 23);
-            const night = calculatePeriodTotal(recentConsumptions, 23, 6);
-            const total24h = morning + afternoon + night;
-
-            document.getElementById('morning').textContent = morning;
-            document.getElementById('afternoon').textContent = afternoon;
-            document.getElementById('night').textContent = night;
-            document.getElementById('total24h').textContent = total24h;
+            const total24h = recentConsumptions.reduce((sum, item) => sum + item.amount, 0);
+            document.getElementById('total24h').textContent = `${total24h} ml`;
+            updateBalance();
         }
 
         function updateUrineSummary() {
-            // Son 24 saatlik verileri filtrele
             const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const recentUrineOutputs = urineOutputs.filter(item => item.time > last24Hours);
+            const recentOutputs = urineOutputs.filter(item => 
+                new Date(item.time) > last24Hours
+            );
 
-            const morning = calculatePeriodTotal(recentUrineOutputs, 6, 15);
-            const afternoon = calculatePeriodTotal(recentUrineOutputs, 15, 23);
-            const night = calculatePeriodTotal(recentUrineOutputs, 23, 6);
-            const total24h = morning + afternoon + night;
-
-            document.getElementById('urineMorning').textContent = morning;
-            document.getElementById('urineAfternoon').textContent = afternoon;
-            document.getElementById('urineNight').textContent = night;
-            document.getElementById('urineTotal24h').textContent = total24h;
+            const total24h = recentOutputs.reduce((sum, item) => sum + item.amount, 0);
+            document.getElementById('urineTotal24h').textContent = `${total24h} ml`;
+            updateBalance();
         }
 
-        function calculatePeriodTotal(data, startHour, endHour) {
-            return data.reduce((total, item) => {
-                const hour = item.time.getHours();
-                
-                if (startHour < endHour) {
-                    if (hour >= startHour && hour < endHour) {
-                        return total + item.amount;
-                    }
-                } else {
-                    if (hour >= startHour || hour < endHour) {
-                        return total + item.amount;
-                    }
-                }
-                return total;
-            }, 0);
+        function updateBalance() {
+            const waterTotal = parseInt(document.getElementById('total24h').textContent);
+            const urineTotal = parseInt(document.getElementById('urineTotal24h').textContent);
+            const balance = waterTotal - urineTotal;
+            
+            const balanceElement = document.getElementById('balance');
+            balanceElement.textContent = `${balance} ml`;
+            
+            if (balance > 0) {
+                balanceElement.className = 'summary-value positive';
+            } else if (balance < 0) {
+                balanceElement.className = 'summary-value negative';
+            } else {
+                balanceElement.className = 'summary-value';
+            }
         }
 
         function resetData(type) {

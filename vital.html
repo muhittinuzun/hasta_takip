@@ -163,6 +163,64 @@
                 padding: 20px !important;
             }
         }
+
+        .vital-cards {
+            margin: 20px 0;
+            display: grid;
+            gap: 15px;
+        }
+
+        .vital-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .vital-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .vital-card-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .vital-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .vital-value {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .vital-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .vital-number {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        @media (min-width: 768px) {
+            .vital-cards {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
     </style>
 </head>
 <body>
@@ -206,9 +264,7 @@
         <button onclick="filterData()">FİLTRELE</button>
     </div>
 
-    <div class="chart-container">
-        <canvas id="vitalChart"></canvas>
-    </div>
+    <div class="vital-cards" id="vitalCards"></div>
 
     <script>
         let vitalSigns = [];
@@ -322,6 +378,40 @@
                     }
                 }
             });
+        }
+
+        function updateVitalCards(data = vitalSigns) {
+            const container = document.getElementById('vitalCards');
+            container.innerHTML = '';
+
+            data.sort((a, b) => new Date(b.time) - new Date(a.time))
+                .forEach(vital => {
+                    const card = document.createElement('div');
+                    card.className = 'vital-card';
+                    
+                    card.innerHTML = `
+                        <div class="vital-card-header">
+                            <h3>Vital Bulgular</h3>
+                            <span class="vital-card-time">${new Date(vital.time).toLocaleString()}</span>
+                        </div>
+                        <div class="vital-values">
+                            <div class="vital-value">
+                                <div class="vital-label">Büyük Tansiyon</div>
+                                <div class="vital-number">${vital.systolic}</div>
+                            </div>
+                            <div class="vital-value">
+                                <div class="vital-label">Küçük Tansiyon</div>
+                                <div class="vital-number">${vital.diastolic}</div>
+                            </div>
+                            <div class="vital-value">
+                                <div class="vital-label">Nabız</div>
+                                <div class="vital-number">${vital.pulse}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
         }
     </script>
 </body>
