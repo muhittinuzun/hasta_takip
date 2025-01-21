@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hasta Vital Bulgu Takibi</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -268,7 +267,6 @@
 
     <script>
         let vitalSigns = [];
-        let chart;
 
         // Sayfa yüklendiğinde çalışacak
         window.onload = function() {
@@ -276,7 +274,7 @@
             const savedData = localStorage.getItem('vitalSigns');
             if (savedData) {
                 vitalSigns = JSON.parse(savedData);
-                updateChart();
+                updateVitalCards();
             }
             
             // Tarih filtrelerini bugüne ayarla
@@ -312,7 +310,7 @@
             document.getElementById('diastolic').value = '';
             document.getElementById('pulse').value = '';
 
-            updateChart();
+            updateVitalCards();
         }
 
         function filterData() {
@@ -325,64 +323,17 @@
                 return dataDate >= startDate && dataDate <= endDate;
             });
 
-            updateChart(filteredData);
-        }
-
-        function updateChart(data = vitalSigns) {
-            const ctx = document.getElementById('vitalChart').getContext('2d');
-            
-            // Eğer zaten bir grafik varsa yok et
-            if (chart) {
-                chart.destroy();
-            }
-
-            const labels = data.map(d => new Date(d.time).toLocaleString());
-            
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Sistolik',
-                            data: data.map(d => d.systolic),
-                            borderColor: 'rgb(255, 99, 132)',
-                            tension: 0.1
-                        },
-                        {
-                            label: 'Diastolik',
-                            data: data.map(d => d.diastolic),
-                            borderColor: 'rgb(54, 162, 235)',
-                            tension: 0.1
-                        },
-                        {
-                            label: 'Nabız',
-                            data: data.map(d => d.pulse),
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Vital Bulgular Grafiği'
-                        }
-                    }
-                }
-            });
+            updateVitalCards(filteredData);
         }
 
         function updateVitalCards(data = vitalSigns) {
             const container = document.getElementById('vitalCards');
             container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="vital-card"><p style="text-align: center; color: #666;">Henüz kayıtlı vital bulgu yok.</p></div>';
+                return;
+            }
 
             data.sort((a, b) => new Date(b.time) - new Date(a.time))
                 .forEach(vital => {
