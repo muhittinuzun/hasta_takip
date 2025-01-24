@@ -59,7 +59,17 @@
         .water-input {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .water-input input {
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .water-input button {
+            padding: 10px 20px;
+            white-space: nowrap;
         }
 
         input[type="number"] {
@@ -115,9 +125,10 @@
 
         .data-table th,
         .data-table td {
-            padding: 15px;
+            padding: 12px 8px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
         }
 
         .data-table th {
@@ -186,6 +197,19 @@
                 width: 100%;
                 margin: 2px 0;
             }
+
+            .water-input {
+                flex-wrap: nowrap;
+            }
+            
+            .water-input input {
+                min-width: 100px;
+            }
+            
+            .water-input button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
         }
 
         /* Tablo hücrelerini düzenle */
@@ -231,8 +255,9 @@
         <thead>
             <tr>
                 <th>Tarih</th>
-                <th>Toplam Su (ml)</th>
-                <th>Toplam İdrar (ml)</th>
+                <th>Su (ml)</th>
+                <th>İdrar (ml)</th>
+                <th>Fark (ml)</th>
                 <th>Düzenle</th>
                 <th>Sil</th>
             </tr>
@@ -318,7 +343,7 @@
             if (dailyData.length === 0) {
                 const row = tbody.insertRow();
                 const cell = row.insertCell(0);
-                cell.colSpan = 5;
+                cell.colSpan = 6;
                 cell.textContent = 'Henüz kayıt bulunmuyor';
                 cell.style.textAlign = 'center';
                 return;
@@ -326,18 +351,28 @@
 
             dailyData.forEach(day => {
                 const row = tbody.insertRow();
-                row.insertCell(0).textContent = day.date.toLocaleDateString('tr-TR');
+                row.insertCell(0).textContent = new Date(day.date).toLocaleDateString('tr-TR');
                 row.insertCell(1).textContent = `${day.water} ml`;
                 row.insertCell(2).textContent = `${day.urine} ml`;
                 
-                const editCell = row.insertCell(3);
+                const difference = day.water - day.urine;
+                const diffCell = row.insertCell(3);
+                diffCell.textContent = `${difference} ml`;
+                
+                if (difference > 0) {
+                    diffCell.style.color = '#4CAF50';
+                } else if (difference < 0) {
+                    diffCell.style.color = '#f44336';
+                }
+                
+                const editCell = row.insertCell(4);
                 const editBtn = document.createElement('button');
                 editBtn.textContent = 'Düzenle';
                 editBtn.className = 'edit-btn';
                 editBtn.onclick = () => editDay(day.date.toLocaleDateString('tr-TR'));
                 editCell.appendChild(editBtn);
                 
-                const deleteCell = row.insertCell(4);
+                const deleteCell = row.insertCell(5);
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Sil';
                 deleteBtn.className = 'delete-btn';
