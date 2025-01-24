@@ -58,18 +58,23 @@
 
         .water-input {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             margin-bottom: 20px;
+            align-items: center;
         }
 
         .water-input input {
             flex: 1;
-            max-width: 150px;
+            max-width: 120px;
+            padding: 8px;
+            font-size: 0.9rem;
         }
 
         .water-input button {
-            padding: 10px 20px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
             white-space: nowrap;
+            min-width: auto;
         }
 
         input[type="number"] {
@@ -200,15 +205,28 @@
 
             .water-input {
                 flex-wrap: nowrap;
+                width: 100%;
             }
             
             .water-input input {
-                min-width: 100px;
+                min-width: 80px;
+                max-width: 100px;
             }
             
             .water-input button {
-                padding: 8px 15px;
+                padding: 8px 10px;
                 font-size: 0.9rem;
+                flex-shrink: 0;
+            }
+
+            input[type="number"] {
+                -moz-appearance: textfield;
+            }
+
+            input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
             }
         }
 
