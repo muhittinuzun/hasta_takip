@@ -301,9 +301,10 @@
             };
 
             vitalSigns.push(newData);
-            
-            // LocalStorage'a kaydet
             localStorage.setItem('vitalSigns', JSON.stringify(vitalSigns));
+            
+            // Google Sheets'e kaydet
+            saveToGoogleSheets(newData);
 
             // Inputları temizle
             document.getElementById('systolic').value = '';
@@ -363,6 +364,35 @@
                     
                     container.appendChild(card);
                 });
+        }
+
+        // Script kısmına eklenecek fonksiyonlar
+        async function saveToGoogleSheets(data) {
+            const scriptUrl = localStorage.getItem('googleScriptUrl');
+            
+            if (!scriptUrl) {
+                alert('Google Script URL ayarlanmamış! Lütfen ayarlar sayfasından URL\'yi girin.');
+                return;
+            }
+
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        type: 'vital',
+                        time: new Date().toLocaleString('tr-TR'),
+                        systolic: data.systolic,
+                        diastolic: data.diastolic,
+                        pulse: data.pulse
+                    })
+                });
+
+                const responseData = await response.json();
+                console.log('Vital bulgular kaydedildi:', responseData);
+            } catch (error) {
+                console.error('Kayıt hatası:', error);
+                alert('Veri kaydedilirken bir hata oluştu: ' + error.message);
+            }
         }
     </script>
 </body>

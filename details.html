@@ -3,24 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sıvı Takibi Detayları</title>
+    <title>Ayarlar</title>
     <style>
-        /* index.html'deki stil kodlarını buraya da ekleyin */
-        .details-table {
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .nav-menu {
+            background-color: #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+            text-align: center;
+            font-size: 1.1rem;
+            min-width: 140px;
+        }
+
+        .nav-menu a.active {
+            background-color: #4CAF50;
+        }
+
+        .settings-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .input-group input {
             width: 100%;
-            border-collapse: collapse;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .info-text {
             margin-top: 20px;
-        }
-        .details-table th, .details-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .details-table th {
-            background-color: #f5f5f5;
-        }
-        .details-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -28,67 +90,63 @@
     <div class="nav-menu">
         <a href="index.html">Sıvı Takibi</a>
         <a href="vital.html">Vital Bulgular</a>
-        <a href="details.html" class="active">Detaylar</a>
+        <a href="details.html" class="active">Ayarlar</a>
     </div>
 
-    <h1>Sıvı Takibi Detayları</h1>
+    <div class="settings-container">
+        <h2>Google E-Tablo Ayarları</h2>
+        
+        <div class="input-group">
+            <label for="scriptUrl">Google Script URL:</label>
+            <input type="text" id="scriptUrl" placeholder="Web App URL'sini buraya yapıştırın">
+        </div>
 
-    <table class="details-table">
-        <thead>
-            <tr>
-                <th>Tarih</th>
-                <th>Toplam Su (ml)</th>
-                <th>Toplam İdrar (ml)</th>
-            </tr>
-        </thead>
-        <tbody id="detailsBody"></tbody>
-    </table>
+        <button onclick="saveSettings()">Ayarları Kaydet</button>
+
+        <div class="info-text">
+            <h3>Nasıl Kullanılır?</h3>
+            <ol>
+                <li>Bir Google E-tablo oluşturun</li>
+                <li>E-tabloda şu sayfaları oluşturun:
+                    <ul>
+                        <li>"SiviTakip" - Su tüketimi kayıtları için</li>
+                        <li>"IdrarTakip" - İdrar çıkışı kayıtları için</li>
+                        <li>"VitalBulgular" - Vital bulgu kayıtları için</li>
+                    </ul>
+                </li>
+                <li>Her sayfada şu sütun başlıklarını ekleyin:
+                    <ul>
+                        <li>SiviTakip: Tarih, Miktar (ml)</li>
+                        <li>IdrarTakip: Tarih, Miktar (ml)</li>
+                        <li>VitalBulgular: Tarih, Sistolik, Diastolik, Nabız, Tansiyon</li>
+                    </ul>
+                </li>
+                <li>E-tabloyu "Herkes ile paylaş" seçeneği ile paylaşın</li>
+                <li>E-tablo URL'sinden ID'yi kopyalayın (docs.google.com/spreadsheets/d/<b>ID</b>/edit)</li>
+                <li>Google Cloud Console'dan bir API anahtarı alın</li>
+                <li>Bilgileri yukarıdaki alanlara yapıştırın ve kaydedin</li>
+            </ol>
+        </div>
+    </div>
 
     <script>
         window.onload = function() {
-            loadAndDisplayDetails();
+            // Kayıtlı ayarları yükle
+            const scriptUrl = localStorage.getItem('googleScriptUrl');
+            
+            if (scriptUrl) document.getElementById('scriptUrl').value = scriptUrl;
         };
 
-        function loadAndDisplayDetails() {
-            // LocalStorage'dan verileri yükle
-            const consumptions = JSON.parse(localStorage.getItem('waterConsumptions') || '[]')
-                .map(item => ({ ...item, time: new Date(item.time) }));
-            const urineOutputs = JSON.parse(localStorage.getItem('urineOutputs') || '[]')
-                .map(item => ({ ...item, time: new Date(item.time) }));
+        function saveSettings() {
+            const scriptUrl = document.getElementById('scriptUrl').value.trim();
 
-            // Tarihleri grupla
-            const dailyTotals = {};
+            if (!scriptUrl) {
+                alert('Lütfen Script URL\'sini girin!');
+                return;
+            }
 
-            // Su verilerini grupla
-            consumptions.forEach(item => {
-                const date = item.time.toLocaleDateString();
-                if (!dailyTotals[date]) {
-                    dailyTotals[date] = { water: 0, urine: 0 };
-                }
-                dailyTotals[date].water += item.amount;
-            });
-
-            // İdrar verilerini grupla
-            urineOutputs.forEach(item => {
-                const date = item.time.toLocaleDateString();
-                if (!dailyTotals[date]) {
-                    dailyTotals[date] = { water: 0, urine: 0 };
-                }
-                dailyTotals[date].urine += item.amount;
-            });
-
-            // Tabloyu oluştur
-            const tbody = document.getElementById('detailsBody');
-            tbody.innerHTML = '';
-
-            Object.entries(dailyTotals)
-                .sort((a, b) => new Date(b[0]) - new Date(a[0])) // Tarihe göre sırala (en yeni en üstte)
-                .forEach(([date, totals]) => {
-                    const row = tbody.insertRow();
-                    row.insertCell(0).textContent = date;
-                    row.insertCell(1).textContent = `${totals.water} ml`;
-                    row.insertCell(2).textContent = `${totals.urine} ml`;
-                });
+            localStorage.setItem('googleScriptUrl', scriptUrl);
+            alert('Ayarlar kaydedildi!');
         }
     </script>
 </body>

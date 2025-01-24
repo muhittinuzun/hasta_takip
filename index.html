@@ -263,6 +263,32 @@
             }
         }
 
+        async function saveToGoogleSheets(data, type) {
+            const scriptUrl = localStorage.getItem('googleScriptUrl');
+            
+            if (!scriptUrl) {
+                alert('Google Script URL ayarlanmamış! Lütfen ayarlar sayfasından URL\'yi girin.');
+                return;
+            }
+
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        type: type,
+                        time: new Date().toLocaleString('tr-TR'),
+                        amount: data.amount
+                    })
+                });
+
+                const responseData = await response.json();
+                console.log('Veri kaydedildi:', responseData);
+            } catch (error) {
+                console.error('Kayıt hatası:', error);
+                alert('Veri kaydedilirken bir hata oluştu: ' + error.message);
+            }
+        }
+
         function addWaterConsumption() {
             const amount = parseInt(document.getElementById('waterAmount').value);
             if (isNaN(amount) || amount <= 0) {
@@ -270,17 +296,19 @@
                 return;
             }
 
-            const now = new Date();
-            consumptions.push({
-                time: now,
+            const newData = {
+                time: new Date(),
                 amount: amount
-            });
+            };
 
-            // LocalStorage'a kaydet
+            consumptions.push(newData);
             localStorage.setItem('waterConsumptions', JSON.stringify(consumptions));
+            
+            // Google Sheets'e kaydet
+            saveToGoogleSheets(newData, 'water');
 
-            updateWaterSummary();
             document.getElementById('waterAmount').value = '';
+            updateWaterSummary();
         }
 
         function addUrineOutput() {
@@ -290,17 +318,19 @@
                 return;
             }
 
-            const now = new Date();
-            urineOutputs.push({
-                time: now,
+            const newData = {
+                time: new Date(),
                 amount: amount
-            });
+            };
 
-            // LocalStorage'a kaydet
+            urineOutputs.push(newData);
             localStorage.setItem('urineOutputs', JSON.stringify(urineOutputs));
+            
+            // Google Sheets'e kaydet
+            saveToGoogleSheets(newData, 'urine');
 
-            updateUrineSummary();
             document.getElementById('urineAmount').value = '';
+            updateUrineSummary();
         }
 
         function updateWaterSummary() {
