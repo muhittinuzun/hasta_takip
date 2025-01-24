@@ -220,6 +220,96 @@
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             }
         }
+
+        /* Yeni tablo stilleri */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* Buton stilleri */
+        .edit-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background-color: #2196F3;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #1976D2;
+        }
+
+        .delete-btn:hover {
+            background-color: #D32F2F;
+        }
+
+        @media (max-width: 768px) {
+            .edit-btn, .delete-btn {
+                padding: 10px;
+                width: 100%;
+                margin: 2px 0;
+            }
+
+            .data-table {
+                font-size: 0.9rem;
+            }
+
+            .data-table td, .data-table th {
+                padding: 10px;
+            }
+        }
+
+        .data-table td:nth-last-child(-n+2) {
+            width: 100px;
+            text-align: center;
+        }
+
+        /* Açıklama alanı için stil */
+        textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +335,11 @@
             <label for="pulse">Nabız (Atım/dk)</label>
             <input type="number" id="pulse" min="0" max="200" placeholder="Örn: 75">
         </div>
+
+        <div class="input-field">
+            <label for="notes">Açıklama</label>
+            <textarea id="notes" placeholder="Varsa notlarınızı buraya yazın..."></textarea>
+        </div>
         
         <button onclick="addVitalSigns()">KAYDET</button>
     </div>
@@ -263,30 +358,182 @@
         <button onclick="filterData()">FİLTRELE</button>
     </div>
 
-    <div class="vital-cards" id="vitalCards"></div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Sistolik</th>
+                <th>Diastolik</th>
+                <th>Nabız</th>
+                <th>Açıklama</th>
+                <th>Düzenle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody id="vitalTableBody"></tbody>
+    </table>
 
     <script>
-        let vitalSigns = [];
+        // Global değişkeni tanımla
+        let vitalData = [];
 
-        // Sayfa yüklendiğinde çalışacak
+        // Sayfa yüklendiğinde
         window.onload = function() {
-            // LocalStorage'dan verileri yükle
-            const savedData = localStorage.getItem('vitalSigns');
-            if (savedData) {
-                vitalSigns = JSON.parse(savedData);
-                updateVitalCards();
-            }
-            
-            // Tarih filtrelerini bugüne ayarla
+            console.log('Sayfa yüklendi');
+            loadData();
+            setDefaultDates();
+            updateTable();
+        };
+
+        // Varsayılan tarihleri ayarla
+        function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').value = today;
             document.getElementById('endDate').value = today;
-        };
+        }
 
+        // Filtreleme fonksiyonu
+        function filterData() {
+            updateTable();
+        }
+
+        // Düzenleme fonksiyonu
+        function editVital(time) {
+            const data = vitalData.find(d => new Date(d.time).getTime() === new Date(time).getTime());
+            if (!data) return;
+
+            const systolic = prompt('Büyük tansiyon:', data.systolic);
+            const diastolic = prompt('Küçük tansiyon:', data.diastolic);
+            const pulse = prompt('Nabız:', data.pulse);
+            const notes = prompt('Açıklama:', data.notes || '');
+
+            if (systolic === null || diastolic === null || pulse === null) return;
+
+            const newSystolic = parseInt(systolic);
+            const newDiastolic = parseInt(diastolic);
+            const newPulse = parseInt(pulse);
+
+            if (isNaN(newSystolic) || isNaN(newDiastolic) || isNaN(newPulse)) {
+                alert('Lütfen geçerli sayılar girin!');
+                return;
+            }
+
+            data.systolic = newSystolic;
+            data.diastolic = newDiastolic;
+            data.pulse = newPulse;
+            data.notes = notes;
+
+            saveToLocalStorage();
+            updateTable();
+        }
+
+        // Silme fonksiyonu
+        function deleteVital(time) {
+            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            vitalData = vitalData.filter(d => 
+                new Date(d.time).getTime() !== new Date(time).getTime()
+            );
+
+            saveToLocalStorage();
+            updateTable();
+        }
+
+        // Tabloyu güncelleme fonksiyonunu düzeltelim
+        function updateTable() {
+            console.log('Tablo güncelleme başladı');
+            
+            const tbody = document.getElementById('vitalTableBody');
+            if (!tbody) {
+                console.error('Tablo body elementi bulunamadı');
+                return;
+            }
+
+            tbody.innerHTML = '';
+
+            // Tarih filtrelerini al ve saat ekle
+            const startDate = new Date(document.getElementById('startDate').value);
+            startDate.setHours(0, 0, 0, 0);
+            
+            const endDate = new Date(document.getElementById('endDate').value);
+            endDate.setHours(23, 59, 59, 999);
+
+            console.log('Mevcut veriler:', vitalData.map(d => ({
+                time: d.time.toLocaleString(),
+                systolic: d.systolic,
+                diastolic: d.diastolic,
+                pulse: d.pulse
+            })));
+
+            // Tarihleri karşılaştır
+            const filteredData = vitalData.filter(data => {
+                const dataDate = new Date(data.time);
+                dataDate.setHours(dataDate.getHours() - 3); // Saat dilimi düzeltmesi
+                return dataDate >= startDate && dataDate <= endDate;
+            });
+
+            console.log('Filtre tarihleri:', {
+                start: startDate.toLocaleString(),
+                end: endDate.toLocaleString()
+            });
+
+            console.log('Filtrelenmiş veriler:', filteredData.map(d => ({
+                time: d.time.toLocaleString(),
+                systolic: d.systolic,
+                diastolic: d.diastolic,
+                pulse: d.pulse
+            })));
+
+            if (filteredData.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 7;
+                cell.textContent = 'Henüz kayıt bulunmuyor';
+                cell.style.textAlign = 'center';
+                return;
+            }
+
+            // En yeni kayıtlar üstte olacak şekilde sırala
+            filteredData
+                .sort((a, b) => b.time - a.time)
+                .forEach(data => {
+                    const row = tbody.insertRow();
+                    row.insertCell(0).textContent = data.time.toLocaleString('tr-TR');
+                    row.insertCell(1).textContent = data.systolic;
+                    row.insertCell(2).textContent = data.diastolic;
+                    row.insertCell(3).textContent = data.pulse;
+                    row.insertCell(4).textContent = data.notes || '-';
+
+                    // Düzenle butonu
+                    const editCell = row.insertCell(5);
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Düzenle';
+                    editBtn.className = 'edit-btn';
+                    editBtn.onclick = () => editVital(data.time);
+                    editCell.appendChild(editBtn);
+
+                    // Sil butonu
+                    const deleteCell = row.insertCell(6);
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Sil';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = () => deleteVital(data.time);
+                    deleteCell.appendChild(deleteBtn);
+                });
+        }
+
+        // Vital bulguları ekleme
         function addVitalSigns() {
+            console.log('Vital bulgu ekleme başladı');
+            
             const systolic = parseInt(document.getElementById('systolic').value);
             const diastolic = parseInt(document.getElementById('diastolic').value);
             const pulse = parseInt(document.getElementById('pulse').value);
+            const notes = document.getElementById('notes').value.trim();
+
+            console.log('Girilen değerler:', { systolic, diastolic, pulse, notes });
 
             if (!systolic || !diastolic || !pulse) {
                 alert('Lütfen tüm değerleri giriniz!');
@@ -297,101 +544,71 @@
                 time: new Date(),
                 systolic: systolic,
                 diastolic: diastolic,
-                pulse: pulse
+                pulse: pulse,
+                notes: notes
             };
 
-            vitalSigns.push(newData);
-            localStorage.setItem('vitalSigns', JSON.stringify(vitalSigns));
-            
-            // Google Sheets'e kaydet
-            saveToGoogleSheets(newData);
+            console.log('Eklenecek veri:', newData);
 
-            // Inputları temizle
+            // Veriyi diziye ekle
+            vitalData.push(newData);
+            
+            // LocalStorage'a kaydet
+            saveToLocalStorage();
+            
+            // Tabloyu güncelle
+            updateTable();
+            
+            // Input alanlarını temizle
+            clearInputs();
+
+            console.log('Veri eklendi, güncel veri sayısı:', vitalData.length);
+        }
+
+        // Input alanlarını temizleme
+        function clearInputs() {
             document.getElementById('systolic').value = '';
             document.getElementById('diastolic').value = '';
             document.getElementById('pulse').value = '';
-
-            updateVitalCards();
+            document.getElementById('notes').value = '';
         }
 
-        function filterData() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
-            endDate.setHours(23, 59, 59); // Günün sonuna ayarla
-
-            const filteredData = vitalSigns.filter(data => {
-                const dataDate = new Date(data.time);
-                return dataDate >= startDate && dataDate <= endDate;
-            });
-
-            updateVitalCards(filteredData);
-        }
-
-        function updateVitalCards(data = vitalSigns) {
-            const container = document.getElementById('vitalCards');
-            container.innerHTML = '';
-
-            if (data.length === 0) {
-                container.innerHTML = '<div class="vital-card"><p style="text-align: center; color: #666;">Henüz kayıtlı vital bulgu yok.</p></div>';
-                return;
-            }
-
-            data.sort((a, b) => new Date(b.time) - new Date(a.time))
-                .forEach(vital => {
-                    const card = document.createElement('div');
-                    card.className = 'vital-card';
-                    
-                    card.innerHTML = `
-                        <div class="vital-card-header">
-                            <h3>Vital Bulgular</h3>
-                            <span class="vital-card-time">${new Date(vital.time).toLocaleString()}</span>
-                        </div>
-                        <div class="vital-values">
-                            <div class="vital-value">
-                                <div class="vital-label">Büyük Tansiyon</div>
-                                <div class="vital-number">${vital.systolic}</div>
-                            </div>
-                            <div class="vital-value">
-                                <div class="vital-label">Küçük Tansiyon</div>
-                                <div class="vital-number">${vital.diastolic}</div>
-                            </div>
-                            <div class="vital-value">
-                                <div class="vital-label">Nabız</div>
-                                <div class="vital-number">${vital.pulse}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-        }
-
-        // Script kısmına eklenecek fonksiyonlar
-        async function saveToGoogleSheets(data) {
-            const scriptUrl = localStorage.getItem('googleScriptUrl');
-            
-            if (!scriptUrl) {
-                alert('Google Script URL ayarlanmamış! Lütfen ayarlar sayfasından URL\'yi girin.');
-                return;
-            }
-
+        // LocalStorage'a kaydetme
+        function saveToLocalStorage() {
             try {
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        type: 'vital',
-                        time: new Date().toLocaleString('tr-TR'),
-                        systolic: data.systolic,
-                        diastolic: data.diastolic,
-                        pulse: data.pulse
-                    })
-                });
-
-                const responseData = await response.json();
-                console.log('Vital bulgular kaydedildi:', responseData);
+                const dataToSave = vitalData.map(d => ({
+                    ...d,
+                    time: d.time.toISOString()
+                }));
+                localStorage.setItem('vitalData', JSON.stringify(dataToSave));
+                console.log('Veriler kaydedildi:', dataToSave);
             } catch (error) {
-                console.error('Kayıt hatası:', error);
-                alert('Veri kaydedilirken bir hata oluştu: ' + error.message);
+                console.error('Kaydetme hatası:', error);
+            }
+        }
+
+        // LocalStorage'dan yükleme
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('vitalData');
+                if (saved) {
+                    vitalData = JSON.parse(saved).map(d => ({
+                        ...d,
+                        time: new Date(d.time)
+                    }));
+                    console.log('Veriler yüklendi:', vitalData.map(d => ({
+                        time: d.time.toLocaleString(),
+                        systolic: d.systolic,
+                        diastolic: d.diastolic,
+                        pulse: d.pulse
+                    })));
+                } else {
+                    console.log('Kayıtlı veri bulunamadı');
+                    vitalData = [];
+                }
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                vitalData = [];
             }
         }
     </script>

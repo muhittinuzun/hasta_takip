@@ -8,174 +8,195 @@
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
+            margin: 0 auto;
+            padding: 15px;
         }
-        .container {
+
+        .nav-menu {
+            background-color: #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
             display: flex;
-            gap: 20px;
-        }
-        .column {
-            flex: 1;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-        .input-group {
-            margin: 15px 0;
-            display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             gap: 10px;
         }
-        .input-group label {
-            font-size: 1.1em;
-            font-weight: bold;
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+            text-align: center;
+            font-size: 1.1rem;
+            min-width: 140px;
         }
-        .input-group input {
-            padding: 12px;
-            font-size: 1.2em;
+
+        .nav-menu a.active {
+            background-color: #4CAF50;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-group h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .water-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2rem;
             border: 2px solid #ddd;
             border-radius: 8px;
-            width: 100%;
         }
-        .input-group button {
-            padding: 15px;
-            font-size: 1.1em;
+
+        button {
+            padding: 15px 25px;
+            font-size: 1.2rem;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            min-width: 120px;
+        }
+
+        .urine-button {
             width: 100%;
-        }
-        .summary {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-            font-size: 1.2rem;
-        }
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-        .summary-label {
-            font-weight: bold;
-            color: #333;
-        }
-        .summary-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-        .positive {
-            color: #4CAF50;
-        }
-        .negative {
-            color: #f44336;
-        }
-        .balance {
-            background-color: #e8f5e9;
-            margin-top: 20px;
-            border-radius: 12px;
-            padding: 20px;
-        }
-        .water-column {
-            background-color: #e3f2fd;
-        }
-        .urine-column {
-            background-color: #fff3e0;
-        }
-        .urine-column button {
-            background-color: #FF9800;
-        }
-        .reset-button {
-            padding: 15px;
-            font-size: 1.1em;
-            margin-top: 20px;
-        }
-        .water-column .reset-button {
             background-color: #2196F3;
         }
-        .urine-column .reset-button {
-            background-color: #FF5722;
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
         }
-        .nav-menu {
-            background-color: #333;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+
+        .filter-group input[type="date"] {
+            padding: 12px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
         }
-        .nav-menu a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            margin-right: 10px;
-            border-radius: 3px;
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .nav-menu a.active {
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
             background-color: #4CAF50;
+            color: white;
         }
-        .nav-menu a:hover {
-            background-color: #555;
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
         }
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                margin: 0;
+
+        @media (min-width: 768px) {
+            .filter-group {
+                flex-direction: row;
+                align-items: center;
             }
-            .container {
-                flex-direction: column;
-                gap: 30px;
-            }
-            .column {
-                margin-bottom: 20px;
-                padding: 15px;
-            }
-            h1 {
-                font-size: 1.5em;
-                text-align: center;
-            }
-            h2 {
-                font-size: 1.3em;
-                text-align: center;
-            }
-            .nav-menu {
-                display: flex;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            .nav-menu a {
-                padding: 12px 20px;
-                font-size: 1.1em;
-                text-align: center;
+
+            .filter-group input[type="date"] {
                 flex: 1;
-                min-width: 140px;
             }
-            .input-group input {
-                padding: 15px;
-                font-size: 1.3em;
-            }
-            .input-group button {
-                padding: 18px;
-                font-size: 1.2em;
-            }
-            .summary {
+        }
+
+        @media (hover: none) {
+            button {
                 padding: 20px;
             }
-            .summary p {
-                margin: 15px 0;
+            
+            input {
+                padding: 20px !important;
             }
-            button, input, .nav-menu a {
-                min-height: 44px;
+        }
+
+        /* Tablo butonları için stiller */
+        .edit-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background-color: #2196F3;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #1976D2;
+        }
+
+        .delete-btn:hover {
+            background-color: #D32F2F;
+        }
+
+        /* Mobil için buton düzenlemeleri */
+        @media (max-width: 768px) {
+            .edit-btn, .delete-btn {
+                padding: 10px;
+                width: 100%;
+                margin: 2px 0;
             }
+        }
+
+        /* Tablo hücrelerini düzenle */
+        .data-table td {
+            vertical-align: middle;
+        }
+
+        /* Son iki sütunu (düzenle ve sil butonları) için genişlik ayarı */
+        .data-table td:nth-last-child(-n+2) {
+            width: 100px;
+            text-align: center;
         }
     </style>
 </head>
@@ -183,209 +204,236 @@
     <div class="nav-menu">
         <a href="index.html" class="active">Sıvı Takibi</a>
         <a href="vital.html">Vital Bulgular</a>
-        <a href="details.html">Detaylar</a>
     </div>
-    <h1>Hasta Sıvı Takip Sistemi</h1>
-    
-    <div class="container">
-        <!-- Su Takip Sütunu -->
-        <div class="column water-column">
-            <h2>Su Tüketim Takibi</h2>
-            <div class="input-group">
-                <label for="waterAmount">Su Miktarı (ml):</label>
-                <input type="number" id="waterAmount" min="0">
-                <button onclick="addWaterConsumption()">Ekle</button>
-            </div>
 
-            <div class="summary">
-                <div class="summary-item">
-                    <span class="summary-label">Son 24 Saat Toplam Su:</span>
-                    <span class="summary-value" id="total24h">0 ml</span>
-                </div>
+    <div class="input-container">
+        <div class="input-group">
+            <h2>Su Tüketimi</h2>
+            <div class="water-input">
+                <input type="number" id="waterAmount" placeholder="Su miktarı (ml)" min="0">
+                <button onclick="addWater()">Ekle</button>
             </div>
-            <button onclick="resetData('water')" class="reset-button">Su Verilerini Sıfırla</button>
         </div>
 
-        <!-- İdrar Takip Sütunu -->
-        <div class="column urine-column">
+        <div class="input-group">
             <h2>İdrar Takibi</h2>
-            <div class="input-group">
-                <label for="urineAmount">İdrar Miktarı (ml):</label>
-                <input type="number" id="urineAmount" min="0">
-                <button onclick="addUrineOutput()">Ekle</button>
-            </div>
-
-            <div class="summary">
-                <div class="summary-item">
-                    <span class="summary-label">Son 24 Saat Toplam İdrar:</span>
-                    <span class="summary-value" id="urineTotal24h">0 ml</span>
-                </div>
-            </div>
-            <button onclick="resetData('urine')" class="reset-button">İdrar Verilerini Sıfırla</button>
+            <button class="urine-button" onclick="addUrine()">İdrar (+120ml)</button>
         </div>
     </div>
 
-    <div class="balance">
-        <div class="summary-item">
-            <span class="summary-label">Su-İdrar Dengesi:</span>
-            <span class="summary-value" id="balance">0 ml</span>
-        </div>
+    <div class="filter-group">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <button onclick="filterData()">Filtrele</button>
     </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Toplam Su (ml)</th>
+                <th>Toplam İdrar (ml)</th>
+                <th>Düzenle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody id="dataTableBody"></tbody>
+    </table>
 
     <script>
-        let consumptions = [];
-        let urineOutputs = [];
+        let waterData = [];
+        let urineData = [];
 
-        // Sayfa yüklendiğinde verileri yükle
         window.onload = function() {
             loadData();
-            updateWaterSummary();
-            updateUrineSummary();
+            setDefaultDates();
+            updateTable();
         };
 
-        // LocalStorage'dan verileri yükle
-        function loadData() {
-            const savedConsumptions = localStorage.getItem('waterConsumptions');
-            const savedUrineOutputs = localStorage.getItem('urineOutputs');
-            
-            if (savedConsumptions) {
-                consumptions = JSON.parse(savedConsumptions).map(item => ({
-                    ...item,
-                    time: new Date(item.time)
-                }));
-            }
-            
-            if (savedUrineOutputs) {
-                urineOutputs = JSON.parse(savedUrineOutputs).map(item => ({
-                    ...item,
-                    time: new Date(item.time)
-                }));
-            }
-        }
+        function addWater() {
+            const input = document.getElementById('waterAmount');
+            const amount = parseInt(input.value);
 
-        async function saveToGoogleSheets(data, type) {
-            const scriptUrl = localStorage.getItem('googleScriptUrl');
-            
-            if (!scriptUrl) {
-                alert('Google Script URL ayarlanmamış! Lütfen ayarlar sayfasından URL\'yi girin.');
+            if (!amount || amount <= 0) {
+                alert('Lütfen geçerli bir miktar girin!');
                 return;
             }
 
+            waterData.push({
+                time: new Date(),
+                amount: amount
+            });
+
+            saveToLocalStorage();
+            updateTable();
+            input.value = '';
+        }
+
+        function addUrine() {
+            urineData.push({
+                time: new Date(),
+                amount: 120
+            });
+
+            saveToLocalStorage();
+            updateTable();
+        }
+
+        function saveToLocalStorage() {
             try {
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        type: type,
-                        time: new Date().toLocaleString('tr-TR'),
-                        amount: data.amount
-                    })
-                });
-
-                const responseData = await response.json();
-                console.log('Veri kaydedildi:', responseData);
+                localStorage.setItem('waterData', JSON.stringify(waterData));
+                localStorage.setItem('urineData', JSON.stringify(urineData));
             } catch (error) {
-                console.error('Kayıt hatası:', error);
-                alert('Veri kaydedilirken bir hata oluştu: ' + error.message);
+                console.error('Kaydetme hatası:', error);
             }
         }
 
-        function addWaterConsumption() {
-            const amount = parseInt(document.getElementById('waterAmount').value);
-            if (isNaN(amount) || amount <= 0) {
-                alert('Lütfen geçerli bir miktar giriniz!');
+        function loadData() {
+            try {
+                const savedWater = localStorage.getItem('waterData');
+                const savedUrine = localStorage.getItem('urineData');
+
+                waterData = savedWater ? JSON.parse(savedWater).map(d => ({
+                    time: new Date(d.time),
+                    amount: d.amount
+                })) : [];
+
+                urineData = savedUrine ? JSON.parse(savedUrine).map(d => ({
+                    time: new Date(d.time),
+                    amount: d.amount
+                })) : [];
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                waterData = [];
+                urineData = [];
+            }
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            const dailyData = getDailyTotals();
+
+            if (dailyData.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 5;
+                cell.textContent = 'Henüz kayıt bulunmuyor';
+                cell.style.textAlign = 'center';
                 return;
             }
 
-            const newData = {
-                time: new Date(),
-                amount: amount
-            };
-
-            consumptions.push(newData);
-            localStorage.setItem('waterConsumptions', JSON.stringify(consumptions));
-            
-            // Google Sheets'e kaydet
-            saveToGoogleSheets(newData, 'water');
-
-            document.getElementById('waterAmount').value = '';
-            updateWaterSummary();
+            dailyData.forEach(day => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = day.date.toLocaleDateString('tr-TR');
+                row.insertCell(1).textContent = `${day.water} ml`;
+                row.insertCell(2).textContent = `${day.urine} ml`;
+                
+                const editCell = row.insertCell(3);
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Düzenle';
+                editBtn.className = 'edit-btn';
+                editBtn.onclick = () => editDay(day.date.toLocaleDateString('tr-TR'));
+                editCell.appendChild(editBtn);
+                
+                const deleteCell = row.insertCell(4);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Sil';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => deleteDay(day.date.toLocaleDateString('tr-TR'));
+                deleteCell.appendChild(deleteBtn);
+            });
         }
 
-        function addUrineOutput() {
-            const amount = parseInt(document.getElementById('urineAmount').value);
-            if (isNaN(amount) || amount <= 0) {
-                alert('Lütfen geçerli bir miktar giriniz!');
-                return;
-            }
+        function getDailyTotals() {
+            const dailyTotals = {};
 
-            const newData = {
-                time: new Date(),
-                amount: amount
-            };
-
-            urineOutputs.push(newData);
-            localStorage.setItem('urineOutputs', JSON.stringify(urineOutputs));
-            
-            // Google Sheets'e kaydet
-            saveToGoogleSheets(newData, 'urine');
-
-            document.getElementById('urineAmount').value = '';
-            updateUrineSummary();
-        }
-
-        function updateWaterSummary() {
-            const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const recentConsumptions = consumptions.filter(item => 
-                new Date(item.time) > last24Hours
-            );
-
-            const total24h = recentConsumptions.reduce((sum, item) => sum + item.amount, 0);
-            document.getElementById('total24h').textContent = `${total24h} ml`;
-            updateBalance();
-        }
-
-        function updateUrineSummary() {
-            const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const recentOutputs = urineOutputs.filter(item => 
-                new Date(item.time) > last24Hours
-            );
-
-            const total24h = recentOutputs.reduce((sum, item) => sum + item.amount, 0);
-            document.getElementById('urineTotal24h').textContent = `${total24h} ml`;
-            updateBalance();
-        }
-
-        function updateBalance() {
-            const waterTotal = parseInt(document.getElementById('total24h').textContent);
-            const urineTotal = parseInt(document.getElementById('urineTotal24h').textContent);
-            const balance = waterTotal - urineTotal;
-            
-            const balanceElement = document.getElementById('balance');
-            balanceElement.textContent = `${balance} ml`;
-            
-            if (balance > 0) {
-                balanceElement.className = 'summary-value positive';
-            } else if (balance < 0) {
-                balanceElement.className = 'summary-value negative';
-            } else {
-                balanceElement.className = 'summary-value';
-            }
-        }
-
-        function resetData(type) {
-            const onay = confirm(`${type === 'water' ? 'Su' : 'İdrar'} verilerini sıfırlamak istediğinizden emin misiniz?`);
-            
-            if (onay) {
-                if (type === 'water') {
-                    consumptions = [];
-                    localStorage.removeItem('waterConsumptions');
-                    updateWaterSummary();
-                } else {
-                    urineOutputs = [];
-                    localStorage.removeItem('urineOutputs');
-                    updateUrineSummary();
+            waterData.forEach(data => {
+                const dateStr = data.time.toLocaleDateString('tr-TR');
+                if (!dailyTotals[dateStr]) {
+                    dailyTotals[dateStr] = {
+                        date: data.time,
+                        water: 0,
+                        urine: 0
+                    };
                 }
+                dailyTotals[dateStr].water += data.amount;
+            });
+
+            urineData.forEach(data => {
+                const dateStr = data.time.toLocaleDateString('tr-TR');
+                if (!dailyTotals[dateStr]) {
+                    dailyTotals[dateStr] = {
+                        date: data.time,
+                        water: 0,
+                        urine: 0
+                    };
+                }
+                dailyTotals[dateStr].urine += data.amount;
+            });
+
+            return Object.values(dailyTotals).sort((a, b) => b.date - a.date);
+        }
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+        }
+
+        function filterData() {
+            updateTable();
+        }
+
+        function editDay(dateStr) {
+            const day = getDailyTotals().find(d => d.date.toLocaleDateString('tr-TR') === dateStr);
+            if (!day) return;
+
+            const waterAmount = prompt('Su miktarını girin (ml):', day.water);
+            const urineAmount = prompt('İdrar miktarını girin (ml):', day.urine);
+
+            if (waterAmount === null || urineAmount === null) return;
+
+            const newWater = parseInt(waterAmount);
+            const newUrine = parseInt(urineAmount);
+
+            if (isNaN(newWater) || isNaN(newUrine)) {
+                alert('Lütfen geçerli sayılar girin!');
+                return;
             }
+
+            waterData = waterData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
+            urineData = urineData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
+
+            if (newWater > 0) {
+                waterData.push({
+                    time: new Date(day.date),
+                    amount: newWater
+                });
+            }
+
+            if (newUrine > 0) {
+                urineData.push({
+                    time: new Date(day.date),
+                    amount: newUrine
+                });
+            }
+
+            saveToLocalStorage();
+            updateTable();
+        }
+
+        function deleteDay(dateStr) {
+            if (!confirm('Bu günün kayıtlarını silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            waterData = waterData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
+            urineData = urineData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
+
+            saveToLocalStorage();
+            updateTable();
         }
     </script>
 </body>
