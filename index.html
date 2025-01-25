@@ -359,8 +359,10 @@
     </table>
 
     <script>
+        // Global değişkenler
         let waterData = [];
         let urineData = [];
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9vHmi0kxqdNPUU0HihtP9FLHjqE9QIa0xr_K-WL5fKY6mlA0I0KOPl0pQmr1Jy8iy/exec';
 
         window.onload = function() {
             loadData();
@@ -369,76 +371,87 @@
             updateTable();
         };
 
+        // Veri ekleme fonksiyonu
+        async function addEntry(amount, type) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'addSivi',
+                        amount: amount,
+                        type: type
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    loadData(); // Verileri yeniden yükle
+                } else {
+                    alert('Veri eklenirken bir hata oluştu!');
+                }
+            } catch (error) {
+                console.error('Veri ekleme hatası:', error);
+                alert('Bağlantı hatası oluştu!');
+            }
+        }
+
+        // Verileri yükleme fonksiyonu
+        async function loadData() {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getSivi'
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    // Verileri işle
+                    waterData = result.data
+                        .filter(d => d.type === 'Su')
+                        .map(d => ({
+                            time: new Date(d.date),
+                            amount: d.amount
+                        }));
+                    urineData = result.data
+                        .filter(d => d.type === 'İdrar')
+                        .map(d => ({
+                            time: new Date(d.date),
+                            amount: d.amount
+                        }));
+                    updateTable();
+                    updateDailyEntries();
+                }
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+            }
+        }
+
+        // Su ekleme fonksiyonunu güncelle
         function addWater() {
             const input = document.getElementById('waterAmount');
             const amount = parseInt(input.value);
-
+            
             if (!amount || amount <= 0) {
                 alert('Lütfen geçerli bir miktar girin!');
                 return;
             }
-
-            const newData = {
-                time: new Date(),
-                amount: amount
-            };
-
-            waterData.push(newData);
-            saveToLocalStorage();
-            updateDailyEntries();
-            updateTable();
+            
+            addEntry(amount, 'Su');
             input.value = '';
         }
 
+        // İdrar ekleme fonksiyonunu güncelle
         function addUrine() {
             const input = document.getElementById('urineAmount');
             const amount = parseInt(input.value);
-
+            
             if (!amount || amount <= 0) {
                 alert('Lütfen geçerli bir miktar girin!');
                 return;
             }
-
-            const newData = {
-                time: new Date(),
-                amount: amount
-            };
-
-            urineData.push(newData);
-            saveToLocalStorage();
-            updateDailyEntries();
-            updateTable();
+            
+            addEntry(amount, 'İdrar');
             input.value = '';
-        }
-
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem('waterData', JSON.stringify(waterData));
-                localStorage.setItem('urineData', JSON.stringify(urineData));
-            } catch (error) {
-                console.error('Kaydetme hatası:', error);
-            }
-        }
-
-        function loadData() {
-            try {
-                const savedWater = localStorage.getItem('waterData');
-                const savedUrine = localStorage.getItem('urineData');
-
-                waterData = savedWater ? JSON.parse(savedWater).map(d => ({
-                    time: new Date(d.time),
-                    amount: d.amount
-                })) : [];
-
-                urineData = savedUrine ? JSON.parse(savedUrine).map(d => ({
-                    time: new Date(d.time),
-                    amount: d.amount
-                })) : [];
-            } catch (error) {
-                console.error('Veri yükleme hatası:', error);
-                waterData = [];
-                urineData = [];
-            }
         }
 
         function updateTable() {
@@ -562,7 +575,6 @@
                 });
             }
 
-            saveToLocalStorage();
             updateTable();
         }
 
@@ -574,7 +586,6 @@
             waterData = waterData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
             urineData = urineData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
 
-            saveToLocalStorage();
             updateTable();
         }
 
@@ -634,8 +645,6 @@
                 urineData = urineData.filter(d => d.time.getTime() !== entry.time.getTime());
             }
 
-            saveToLocalStorage();
-            updateDailyEntries();
             updateTable();
         }
     </script>
