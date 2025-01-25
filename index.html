@@ -38,43 +38,48 @@
         }
 
         .input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .input-group {
+            margin: 20px 0;
+            padding: 15px;
             background-color: #f8f9fa;
-            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .input-group h2 {
-            margin-top: 0;
-            color: #333;
+        .input-row {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
         }
 
-        .water-input {
+        .input-group {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .water-input, .urine-input {
             display: flex;
             gap: 5px;
-            margin-bottom: 20px;
-            align-items: center;
         }
 
-        .water-input input {
+        .water-input input, .urine-input input {
             flex: 1;
+            min-width: 80px;
             max-width: 120px;
             padding: 8px;
             font-size: 0.9rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
         }
 
-        .water-input button {
+        .water-input button, .urine-input button {
             padding: 8px 12px;
             font-size: 0.9rem;
             white-space: nowrap;
-            min-width: auto;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
         }
 
         input[type="number"] {
@@ -203,20 +208,23 @@
                 margin: 2px 0;
             }
 
-            .water-input {
+            .input-row {
+                flex-direction: row;
                 flex-wrap: nowrap;
+            }
+            
+            .water-input, .urine-input {
                 width: 100%;
             }
             
-            .water-input input {
-                min-width: 80px;
-                max-width: 100px;
+            .water-input input, .urine-input input {
+                min-width: 60px;
+                font-size: 0.85rem;
             }
-            
-            .water-input button {
+
+            .water-input button, .urine-input button {
                 padding: 8px 10px;
-                font-size: 0.9rem;
-                flex-shrink: 0;
+                font-size: 0.85rem;
             }
 
             input[type="number"] {
@@ -240,6 +248,58 @@
             width: 100px;
             text-align: center;
         }
+
+        .data-table.daily-entries {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .data-table.daily-entries th,
+        .data-table.daily-entries td {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .data-table.daily-entries th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .data-table.daily-entries tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .data-table.totals {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .data-table.totals th,
+        .data-table.totals td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        .data-table.totals th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .data-table.totals tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -249,17 +309,20 @@
     </div>
 
     <div class="input-container">
-        <div class="input-group">
-            <h2>Su Tüketimi</h2>
-            <div class="water-input">
-                <input type="number" id="waterAmount" placeholder="Su miktarı (ml)" min="0">
-                <button onclick="addWater()">Ekle</button>
+        <div class="input-row">
+            <div class="input-group">
+                <div class="water-input">
+                    <input type="number" id="waterAmount" placeholder="Su (ml)" min="0">
+                    <button onclick="addWater()">Ekle</button>
+                </div>
             </div>
-        </div>
-
-        <div class="input-group">
-            <h2>İdrar Takibi</h2>
-            <button class="urine-button" onclick="addUrine()">İdrar (+120ml)</button>
+            
+            <div class="input-group">
+                <div class="urine-input">
+                    <input type="number" id="urineAmount" placeholder="İdrar (ml)" min="0">
+                    <button onclick="addUrine()">Ekle</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -269,7 +332,19 @@
         <button onclick="filterData()">Filtrele</button>
     </div>
 
-    <table class="data-table">
+    <table class="data-table daily-entries">
+        <thead>
+            <tr>
+                <th>Saat</th>
+                <th>Tür</th>
+                <th>Miktar (ml)</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody id="dailyEntriesBody"></tbody>
+    </table>
+
+    <table class="data-table totals">
         <thead>
             <tr>
                 <th>Tarih</th>
@@ -290,6 +365,7 @@
         window.onload = function() {
             loadData();
             setDefaultDates();
+            updateDailyEntries();
             updateTable();
         };
 
@@ -302,24 +378,37 @@
                 return;
             }
 
-            waterData.push({
+            const newData = {
                 time: new Date(),
                 amount: amount
-            });
+            };
 
+            waterData.push(newData);
             saveToLocalStorage();
+            updateDailyEntries();
             updateTable();
             input.value = '';
         }
 
         function addUrine() {
-            urineData.push({
-                time: new Date(),
-                amount: 120
-            });
+            const input = document.getElementById('urineAmount');
+            const amount = parseInt(input.value);
 
+            if (!amount || amount <= 0) {
+                alert('Lütfen geçerli bir miktar girin!');
+                return;
+            }
+
+            const newData = {
+                time: new Date(),
+                amount: amount
+            };
+
+            urineData.push(newData);
             saveToLocalStorage();
+            updateDailyEntries();
             updateTable();
+            input.value = '';
         }
 
         function saveToLocalStorage() {
@@ -486,6 +575,67 @@
             urineData = urineData.filter(d => d.time.toLocaleDateString('tr-TR') !== dateStr);
 
             saveToLocalStorage();
+            updateTable();
+        }
+
+        function updateDailyEntries() {
+            const tbody = document.getElementById('dailyEntriesBody');
+            tbody.innerHTML = '';
+
+            // Bugünün başlangıcı ve sonu
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            // Tüm girişleri birleştir ve sırala
+            const allEntries = [
+                ...waterData.map(d => ({ ...d, type: 'Su' })),
+                ...urineData.map(d => ({ ...d, type: 'İdrar' }))
+            ]
+            .filter(d => d.time >= today && d.time < tomorrow)
+            .sort((a, b) => b.time - a.time);
+
+            allEntries.forEach(entry => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = entry.time.toLocaleTimeString('tr-TR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                row.insertCell(1).textContent = entry.type;
+                row.insertCell(2).textContent = `${entry.amount} ml`;
+
+                // Sil butonu
+                const deleteCell = row.insertCell(3);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Sil';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => deleteEntry(entry);
+                deleteCell.appendChild(deleteBtn);
+            });
+
+            if (allEntries.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 4;
+                cell.textContent = 'Bugün henüz kayıt girilmemiş';
+                cell.style.textAlign = 'center';
+            }
+        }
+
+        function deleteEntry(entry) {
+            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            if (entry.type === 'Su') {
+                waterData = waterData.filter(d => d.time.getTime() !== entry.time.getTime());
+            } else {
+                urineData = urineData.filter(d => d.time.getTime() !== entry.time.getTime());
+            }
+
+            saveToLocalStorage();
+            updateDailyEntries();
             updateTable();
         }
     </script>
