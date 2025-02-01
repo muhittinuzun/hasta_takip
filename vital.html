@@ -366,8 +366,6 @@
                 <th>Diastolik</th>
                 <th>Nabız</th>
                 <th>Açıklama</th>
-                <th>Düzenle</th>
-                <th>Sil</th>
             </tr>
         </thead>
         <tbody id="vitalTableBody"></tbody>
@@ -394,50 +392,6 @@
 
         // Filtreleme fonksiyonu
         function filterData() {
-            updateTable();
-        }
-
-        // Düzenleme fonksiyonu
-        function editVital(time) {
-            const data = vitalData.find(d => new Date(d.time).getTime() === new Date(time).getTime());
-            if (!data) return;
-
-            const systolic = prompt('Büyük tansiyon:', data.systolic);
-            const diastolic = prompt('Küçük tansiyon:', data.diastolic);
-            const pulse = prompt('Nabız:', data.pulse);
-            const notes = prompt('Açıklama:', data.notes || '');
-
-            if (systolic === null || diastolic === null || pulse === null) return;
-
-            const newSystolic = parseInt(systolic);
-            const newDiastolic = parseInt(diastolic);
-            const newPulse = parseInt(pulse);
-
-            if (isNaN(newSystolic) || isNaN(newDiastolic) || isNaN(newPulse)) {
-                alert('Lütfen geçerli sayılar girin!');
-                return;
-            }
-
-            data.systolic = newSystolic;
-            data.diastolic = newDiastolic;
-            data.pulse = newPulse;
-            data.notes = notes;
-
-            saveToLocalStorage();
-            updateTable();
-        }
-
-        // Silme fonksiyonu
-        function deleteVital(time) {
-            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
-                return;
-            }
-
-            vitalData = vitalData.filter(d => 
-                new Date(d.time).getTime() !== new Date(time).getTime()
-            );
-
-            saveToLocalStorage();
             updateTable();
         }
 
@@ -505,64 +459,40 @@
                     row.insertCell(2).textContent = data.diastolic;
                     row.insertCell(3).textContent = data.pulse;
                     row.insertCell(4).textContent = data.notes || '-';
-
-                    // Düzenle butonu
-                    const editCell = row.insertCell(5);
-                    const editBtn = document.createElement('button');
-                    editBtn.textContent = 'Düzenle';
-                    editBtn.className = 'edit-btn';
-                    editBtn.onclick = () => editVital(data.time);
-                    editCell.appendChild(editBtn);
-
-                    // Sil butonu
-                    const deleteCell = row.insertCell(6);
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Sil';
-                    deleteBtn.className = 'delete-btn';
-                    deleteBtn.onclick = () => deleteVital(data.time);
-                    deleteCell.appendChild(deleteBtn);
                 });
         }
 
         // Vital bulguları ekleme
-        function addVitalSigns() {
-            console.log('Vital bulgu ekleme başladı');
-            
+        async function addVitalSigns() {
             const systolic = parseInt(document.getElementById('systolic').value);
             const diastolic = parseInt(document.getElementById('diastolic').value);
             const pulse = parseInt(document.getElementById('pulse').value);
             const notes = document.getElementById('notes').value.trim();
-
-            console.log('Girilen değerler:', { systolic, diastolic, pulse, notes });
 
             if (!systolic || !diastolic || !pulse) {
                 alert('Lütfen tüm değerleri giriniz!');
                 return;
             }
 
-            const newData = {
-                time: new Date(),
-                systolic: systolic,
-                diastolic: diastolic,
-                pulse: pulse,
-                notes: notes
-            };
+            try {
+                const response = await fetch('http://localhost:3000/api/vital', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ systolic, diastolic, pulse, notes })
+                });
 
-            console.log('Eklenecek veri:', newData);
-
-            // Veriyi diziye ekle
-            vitalData.push(newData);
-            
-            // LocalStorage'a kaydet
-            saveToLocalStorage();
-            
-            // Tabloyu güncelle
-            updateTable();
-            
-            // Input alanlarını temizle
-            clearInputs();
-
-            console.log('Veri eklendi, güncel veri sayısı:', vitalData.length);
+                if (response.ok) {
+                    // Input alanlarını temizle
+                    clearInputs();
+                    // Verileri yeniden yükle
+                    loadData();
+                }
+            } catch (error) {
+                console.error('Veri ekleme hatası:', error);
+                alert('Veri eklenirken bir hata oluştu!');
+            }
         }
 
         // Input alanlarını temizleme
@@ -587,28 +517,32 @@
             }
         }
 
-        // LocalStorage'dan yükleme
-        function loadData() {
+        // Verileri yükleme fonksiyonu
+        async function loadData() {
             try {
-                const saved = localStorage.getItem('vitalData');
-                if (saved) {
-                    vitalData = JSON.parse(saved).map(d => ({
-                        ...d,
-                        time: new Date(d.time)
-                    }));
-                    console.log('Veriler yüklendi:', vitalData.map(d => ({
-                        time: d.time.toLocaleString(),
-                        systolic: d.systolic,
-                        diastolic: d.diastolic,
-                        pulse: d.pulse
-                    })));
-                } else {
-                    console.log('Kayıtlı veri bulunamadı');
-                    vitalData = [];
-                }
+                const response = await fetch('http://localhost:3000/api/vital');
+                const data = await response.text();
+                
+                const rows = data.split('\n').slice(1); // Başlık satırını atla
+                
+                vitalData = rows
+                    .filter(row => row.trim())
+                    .map(row => {
+                        const [date, time, systolic, diastolic, pulse, notes] = row.split(',');
+                        return {
+                            time: new Date(`${date} ${time}`),
+                            systolic: parseInt(systolic),
+                            diastolic: parseInt(diastolic),
+                            pulse: parseInt(pulse),
+                            notes: notes ? notes.replace(/"/g, '') : ''
+                        };
+                    });
+
+                updateTable();
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
                 vitalData = [];
+                updateTable();
             }
         }
     </script>
