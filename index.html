@@ -362,7 +362,7 @@
         // Global değişkenler
         let waterData = [];
         let urineData = [];
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9vHmi0kxqdNPUU0HihtP9FLHjqE9QIa0xr_K-WL5fKY6mlA0I0KOPl0pQmr1Jy8iy/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWOH5KcJJZDgIAzgIajxQJ-8UTyBy8nF9IsfmtUZxWNA4VwU5gsV5wneGKmJxs09GL/exec';
 
         window.onload = function() {
             loadData();
@@ -374,20 +374,14 @@
         // Veri ekleme fonksiyonu
         async function addEntry(amount, type) {
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'addSivi',
-                        amount: amount,
-                        type: type
-                    })
+                const response = await fetch(SCRIPT_URL + `?action=addSivi&amount=${amount}&type=${type}`, {
+                    method: 'GET',
+                    mode: 'no-cors'
                 });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    loadData(); // Verileri yeniden yükle
-                } else {
-                    alert('Veri eklenirken bir hata oluştu!');
-                }
+
+                // Veriyi ekledikten sonra verileri yeniden yükle
+                setTimeout(loadData, 1000); // 1 saniye bekle ve verileri yenile
+                
             } catch (error) {
                 console.error('Veri ekleme hatası:', error);
                 alert('Bağlantı hatası oluştu!');
@@ -397,29 +391,29 @@
         // Verileri yükleme fonksiyonu
         async function loadData() {
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'getSivi'
-                    })
+                const response = await fetch(SCRIPT_URL + '?action=getSivi', {
+                    method: 'GET',
+                    mode: 'no-cors'
                 });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    // Verileri işle
-                    waterData = result.data
-                        .filter(d => d.type === 'Su')
-                        .map(d => ({
-                            time: new Date(d.date),
-                            amount: d.amount
-                        }));
-                    urineData = result.data
-                        .filter(d => d.type === 'İdrar')
-                        .map(d => ({
-                            time: new Date(d.date),
-                            amount: d.amount
-                        }));
-                    updateTable();
-                    updateDailyEntries();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result && result.status === 'success') {
+                        waterData = result.data
+                            .filter(d => d.type === 'Su')
+                            .map(d => ({
+                                time: new Date(d.date),
+                                amount: d.amount
+                            }));
+                        urineData = result.data
+                            .filter(d => d.type === 'İdrar')
+                            .map(d => ({
+                                time: new Date(d.date),
+                                amount: d.amount
+                            }));
+                        updateTable();
+                        updateDailyEntries();
+                    }
                 }
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
