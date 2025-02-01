@@ -381,28 +381,21 @@
         async function loadData() {
             try {
                 const response = await fetch('http://localhost:3000/api/sivi');
-                const data = await response.text();
+                const data = await response.json();
                 
-                const rows = data.split('\n').slice(1); // Başlık satırını atla
-                
-                waterData = [];
-                urineData = [];
-                
-                rows.forEach(row => {
-                    if (!row) return;
-                    
-                    const [date, time, type, amount] = row.split(',');
-                    const entry = {
-                        time: new Date(`${date} ${time}`),
-                        amount: parseInt(amount)
-                    };
-                    
-                    if (type === '"Su"') {
-                        waterData.push(entry);
-                    } else if (type === '"İdrar"') {
-                        urineData.push(entry);
-                    }
-                });
+                waterData = data
+                    .filter(row => row.tur === 'Su')
+                    .map(row => ({
+                        time: new Date(`${row.tarih} ${row.saat}`),
+                        amount: row.miktar
+                    }));
+
+                urineData = data
+                    .filter(row => row.tur === 'İdrar')
+                    .map(row => ({
+                        time: new Date(`${row.tarih} ${row.saat}`),
+                        amount: row.miktar
+                    }));
 
                 updateTable();
             } catch (error) {

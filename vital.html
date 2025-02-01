@@ -521,22 +521,15 @@
         async function loadData() {
             try {
                 const response = await fetch('http://localhost:3000/api/vital');
-                const data = await response.text();
+                const data = await response.json();
                 
-                const rows = data.split('\n').slice(1); // Başlık satırını atla
-                
-                vitalData = rows
-                    .filter(row => row.trim())
-                    .map(row => {
-                        const [date, time, systolic, diastolic, pulse, notes] = row.split(',');
-                        return {
-                            time: new Date(`${date} ${time}`),
-                            systolic: parseInt(systolic),
-                            diastolic: parseInt(diastolic),
-                            pulse: parseInt(pulse),
-                            notes: notes ? notes.replace(/"/g, '') : ''
-                        };
-                    });
+                vitalData = data.map(row => ({
+                    time: new Date(`${row.tarih} ${row.saat}`),
+                    systolic: row.sistolik,
+                    diastolic: row.diastolik,
+                    pulse: row.nabiz,
+                    notes: row.notlar || ''
+                }));
 
                 updateTable();
             } catch (error) {
