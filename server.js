@@ -42,101 +42,189 @@ db.serialize(() => {
     )`);
 });
 
-// Sıvı verisi ekleme
-app.post('/api/sivi', (req, res) => {
-    const { amount, type } = req.body;
-    const tarih = new Date().toLocaleDateString();
-    const saat = new Date().toLocaleTimeString();
-
-    db.run(
-        'INSERT INTO sivi_takip (tarih, saat, tur, miktar) VALUES (?, ?, ?, ?)',
-        [tarih, saat, type, amount],
-        function(err) {
-            if (err) {
-                console.error('Veri ekleme hatası:', err);
-                res.status(500).json({ success: false, error: err.message });
-                return;
-            }
-            res.json({ success: true, id: this.lastID });
-        }
-    );
-});
-
-// Sıvı verilerini getirme
-app.get('/api/sivi', (req, res) => {
-    db.all(
-        'SELECT * FROM sivi_takip ORDER BY tarih DESC, saat DESC',
-        [],
-        (err, rows) => {
+// API Routes
+app.route('/api/sivi')
+    .get((req, res) => {
+        db.all('SELECT * FROM sivi_takip ORDER BY tarih DESC, saat DESC', [], (err, rows) => {
             if (err) {
                 console.error('Veri getirme hatası:', err);
                 res.status(500).json({ success: false, error: err.message });
                 return;
             }
             res.json(rows);
-        }
-    );
-});
+        });
+    })
+    .post((req, res) => {
+        const { amount, type } = req.body;
+        const tarih = new Date().toLocaleDateString();
+        const saat = new Date().toLocaleTimeString();
 
-// Vital bulgu ekleme
-app.post('/api/vital', (req, res) => {
-    const { systolic, diastolic, pulse, notes } = req.body;
-    const tarih = new Date().toLocaleDateString();
-    const saat = new Date().toLocaleTimeString();
+        db.run(
+            'INSERT INTO sivi_takip (tarih, saat, tur, miktar) VALUES (?, ?, ?, ?)',
+            [tarih, saat, type, amount],
+            function(err) {
+                if (err) {
+                    console.error('Veri ekleme hatası:', err);
+                    res.status(500).json({ success: false, error: err.message });
+                    return;
+                }
+                res.json({ success: true, id: this.lastID });
+            }
+        );
+    })
+    .delete((req, res) => {
+        const { tarih, saat, tur } = req.body;
+        console.log('Silme isteği alındı:', { tarih, saat, tur });
 
-    db.run(
-        'INSERT INTO vital_takip (tarih, saat, sistolik, diastolik, nabiz, notlar) VALUES (?, ?, ?, ?, ?, ?)',
-        [tarih, saat, systolic, diastolic, pulse, notes],
-        function(err) {
+        // Veritabanındaki kayıtları kontrol et
+        db.all('SELECT * FROM sivi_takip', [], (err, rows) => {
             if (err) {
-                console.error('Veri ekleme hatası:', err);
+                console.error('Veritabanı okuma hatası:', err);
                 res.status(500).json({ success: false, error: err.message });
                 return;
             }
-            res.json({ success: true, id: this.lastID });
-        }
-    );
-});
 
-// Vital bulguları getirme
-app.get('/api/vital', (req, res) => {
-    db.all(
-        'SELECT * FROM vital_takip ORDER BY tarih DESC, saat DESC',
-        [],
-        (err, rows) => {
+            console.log('Veritabanındaki kayıtlar:', rows);
+
+            db.run(
+                'DELETE FROM sivi_takip WHERE tarih = ? AND saat = ? AND tur = ?',
+                [tarih, saat, tur],
+                function(err) {
+                    if (err) {
+                        console.error('Silme hatası:', err);
+                        res.status(500).json({ success: false, error: err.message });
+                        return;
+                    }
+
+                    if (this.changes === 0) {
+                        // Eşleşen kayıt bulunamadı, farklı format dene
+                        const date = new Date(tarih + ' ' + saat);
+                        const formattedDate = date.toLocaleDateString();
+                        const formattedTime = date.toLocaleTimeString();
+
+                        db.run(
+                            'DELETE FROM sivi_takip WHERE tarih = ? AND saat = ? AND tur = ?',
+                            [formattedDate, formattedTime, tur],
+                            function(err) {
+                                if (err) {
+                                    console.error('İkinci silme denemesi hatası:', err);
+                                    res.status(500).json({ success: false, error: err.message });
+                                    return;
+                                }
+                                console.log('İkinci deneme silinen kayıt sayısı:', this.changes);
+                                res.json({ 
+                                    success: true, 
+                                    changes: this.changes,
+                                    message: 'Kayıt başarıyla silindi'
+                                });
+                            }
+                        );
+                    } else {
+                        console.log('Silinen kayıt sayısı:', this.changes);
+                        res.json({ 
+                            success: true, 
+                            changes: this.changes,
+                            message: 'Kayıt başarıyla silindi'
+                        });
+                    }
+                }
+            );
+        });
+    });
+
+app.route('/api/vital')
+    .get((req, res) => {
+        db.all('SELECT * FROM vital_takip ORDER BY tarih DESC, saat DESC', [], (err, rows) => {
             if (err) {
                 console.error('Veri getirme hatası:', err);
                 res.status(500).json({ success: false, error: err.message });
                 return;
             }
             res.json(rows);
-        }
-    );
-});
+        });
+    })
+    .post((req, res) => {
+        const { systolic, diastolic, pulse, notes } = req.body;
+        const tarih = new Date().toLocaleDateString();
+        const saat = new Date().toLocaleTimeString();
+
+        db.run(
+            'INSERT INTO vital_takip (tarih, saat, sistolik, diastolik, nabiz, notlar) VALUES (?, ?, ?, ?, ?, ?)',
+            [tarih, saat, systolic, diastolic, pulse, notes],
+            function(err) {
+                if (err) {
+                    console.error('Veri ekleme hatası:', err);
+                    res.status(500).json({ success: false, error: err.message });
+                    return;
+                }
+                res.json({ success: true, id: this.lastID });
+            }
+        );
+    })
+    .delete((req, res) => {
+        const { tarih, saat } = req.body;
+        console.log('Silme isteği alındı:', { tarih, saat });
+
+        // Veritabanındaki kayıtları kontrol et
+        db.all('SELECT * FROM vital_takip', [], (err, rows) => {
+            if (err) {
+                console.error('Veritabanı okuma hatası:', err);
+                res.status(500).json({ success: false, error: err.message });
+                return;
+            }
+
+            console.log('Veritabanındaki kayıtlar:', rows);
+
+            db.run(
+                'DELETE FROM vital_takip WHERE tarih = ? AND saat = ?',
+                [tarih, saat],
+                function(err) {
+                    if (err) {
+                        console.error('Silme hatası:', err);
+                        res.status(500).json({ success: false, error: err.message });
+                        return;
+                    }
+
+                    if (this.changes === 0) {
+                        // Eşleşen kayıt bulunamadı, farklı format dene
+                        const date = new Date(tarih + ' ' + saat);
+                        const formattedDate = date.toLocaleDateString();
+                        const formattedTime = date.toLocaleTimeString();
+
+                        db.run(
+                            'DELETE FROM vital_takip WHERE tarih = ? AND saat = ?',
+                            [formattedDate, formattedTime],
+                            function(err) {
+                                if (err) {
+                                    console.error('İkinci silme denemesi hatası:', err);
+                                    res.status(500).json({ success: false, error: err.message });
+                                    return;
+                                }
+                                console.log('İkinci deneme silinen kayıt sayısı:', this.changes);
+                                res.json({ 
+                                    success: true, 
+                                    changes: this.changes,
+                                    message: 'Kayıt başarıyla silindi'
+                                });
+                            }
+                        );
+                    } else {
+                        console.log('Silinen kayıt sayısı:', this.changes);
+                        res.json({ 
+                            success: true, 
+                            changes: this.changes,
+                            message: 'Kayıt başarıyla silindi'
+                        });
+                    }
+                }
+            );
+        });
+    });
 
 const PORT = process.env.PORT || 3000;
-
-// Port kullanılabilirlik kontrolü
-const server = net.createServer();
-
-server.once('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.log('Port 3000 kullanımda, alternatif port deneniyor...');
-        const altPort = 3001;
-        app.listen(altPort, () => {
-            console.log(`Server running on alternative port ${altPort}`);
-        });
-    }
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
-
-server.once('listening', () => {
-    server.close();
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-});
-
-server.listen(PORT);
 
 // Uygulama kapatıldığında veritabanı bağlantısını kapat
 process.on('SIGINT', () => {

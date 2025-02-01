@@ -366,6 +366,7 @@
                 <th>Diastolik</th>
                 <th>Nabız</th>
                 <th>Açıklama</th>
+                <th>İşlem</th>
             </tr>
         </thead>
         <tbody id="vitalTableBody"></tbody>
@@ -450,8 +451,7 @@
             }
 
             // En yeni kayıtlar üstte olacak şekilde sırala
-            filteredData
-                .sort((a, b) => b.time - a.time)
+            filteredData.sort((a, b) => b.time - a.time)
                 .forEach(data => {
                     const row = tbody.insertRow();
                     row.insertCell(0).textContent = data.time.toLocaleString('tr-TR');
@@ -459,6 +459,24 @@
                     row.insertCell(2).textContent = data.diastolic;
                     row.insertCell(3).textContent = data.pulse;
                     row.insertCell(4).textContent = data.notes || '-';
+                    
+                    // Silme butonu ekle
+                    const deleteCell = row.insertCell(5);
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Sil';
+                    deleteBtn.className = 'delete-btn';
+                    
+                    // Tarih ve saat formatını düzelt
+                    const formattedDate = data.time.toLocaleDateString('tr-TR');
+                    const formattedTime = data.time.toLocaleTimeString('tr-TR');
+                    
+                    console.log('Silme butonu için tarih ve saat:', { 
+                        formattedDate, 
+                        formattedTime 
+                    }); // Debug için log
+                    
+                    deleteBtn.onclick = () => deleteVital(formattedDate, formattedTime);
+                    deleteCell.appendChild(deleteBtn);
                 });
         }
 
@@ -536,6 +554,49 @@
                 console.error('Veri yükleme hatası:', error);
                 vitalData = [];
                 updateTable();
+            }
+        }
+
+        // Silme fonksiyonu
+        async function deleteVital(date, time) {
+            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                console.log('Silinecek kayıt:', { date, time });
+
+                // Tarih ve saat formatını düzelt
+                const dateObj = new Date(date + ' ' + time);
+                const formattedDate = dateObj.toLocaleDateString('tr-TR');
+                const formattedTime = dateObj.toLocaleTimeString('tr-TR');
+
+                console.log('Düzeltilmiş tarih ve saat:', { formattedDate, formattedTime });
+
+                const response = await fetch('http://localhost:3000/api/vital', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tarih: formattedDate,
+                        saat: formattedTime
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Sunucu yanıtı:', result);
+
+                if (response.ok && result.success) {
+                    console.log('Kayıt başarıyla silindi');
+                    await loadData();
+                    updateTable();
+                } else {
+                    throw new Error(result.error || 'Silme işlemi başarısız oldu');
+                }
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                alert('Silme sırasında bir hata oluştu!');
             }
         }
     </script>

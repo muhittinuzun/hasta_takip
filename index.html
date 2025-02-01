@@ -339,6 +339,7 @@
                 <th>Su (ml)</th>
                 <th>İdrar (ml)</th>
                 <th>Fark (ml)</th>
+                <th>İşlem</th>
             </tr>
         </thead>
         <tbody id="dataTableBody"></tbody>
@@ -383,18 +384,21 @@
                 const response = await fetch('http://localhost:3000/api/sivi');
                 const data = await response.json();
                 
+                // Verileri Su ve İdrar olarak ayır
                 waterData = data
                     .filter(row => row.tur === 'Su')
                     .map(row => ({
                         time: new Date(`${row.tarih} ${row.saat}`),
-                        amount: row.miktar
+                        amount: row.miktar,
+                        type: 'Su'  // type ekle
                     }));
 
                 urineData = data
                     .filter(row => row.tur === 'İdrar')
                     .map(row => ({
                         time: new Date(`${row.tarih} ${row.saat}`),
-                        amount: row.miktar
+                        amount: row.miktar,
+                        type: 'İdrar'  // type ekle
                     }));
 
                 updateTable();
@@ -434,6 +438,50 @@
             input.value = '';
         }
 
+        // Silme fonksiyonu
+        async function deleteEntry(date, time, type) {
+            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                console.log('Silinecek kayıt:', { date, time, type });
+
+                // Tarih ve saat formatını düzelt
+                const dateObj = new Date(date + ' ' + time);
+                const formattedDate = dateObj.toLocaleDateString('tr-TR');
+                const formattedTime = dateObj.toLocaleTimeString('tr-TR');
+
+                console.log('Düzeltilmiş tarih ve saat:', { formattedDate, formattedTime, type });
+
+                const response = await fetch('http://localhost:3000/api/sivi', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tarih: formattedDate,
+                        saat: formattedTime,
+                        tur: type
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Sunucu yanıtı:', result);
+
+                if (response.ok && result.success) {
+                    console.log('Kayıt başarıyla silindi');
+                    await loadData();
+                    updateTable();
+                } else {
+                    throw new Error(result.error || 'Silme işlemi başarısız oldu');
+                }
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                alert('Silme sırasında bir hata oluştu!');
+            }
+        }
+
         function updateTable() {
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
@@ -443,27 +491,50 @@
             if (dailyData.length === 0) {
                 const row = tbody.insertRow();
                 const cell = row.insertCell(0);
-                cell.colSpan = 6;
+                cell.colSpan = 5;
                 cell.textContent = 'Henüz kayıt bulunmuyor';
                 cell.style.textAlign = 'center';
                 return;
             }
 
             dailyData.forEach(day => {
-                const row = tbody.insertRow();
-                row.insertCell(0).textContent = new Date(day.date).toLocaleDateString('tr-TR');
-                row.insertCell(1).textContent = `${day.water} ml`;
-                row.insertCell(2).textContent = `${day.urine} ml`;
-                
-                const difference = day.water - day.urine;
-                const diffCell = row.insertCell(3);
-                diffCell.textContent = `${difference} ml`;
-                
-                if (difference > 0) {
-                    diffCell.style.color = '#4CAF50';
-                } else if (difference < 0) {
-                    diffCell.style.color = '#f44336';
-                }
+                // Su ve İdrar kayıtlarını ayrı ayrı bul
+                const waterEntries = waterData.filter(d => 
+                    d.time.toLocaleDateString('tr-TR') === day.date.toLocaleDateString('tr-TR')
+                ).map(d => ({ ...d, type: 'Su' }));
+
+                const urineEntries = urineData.filter(d => 
+                    d.time.toLocaleDateString('tr-TR') === day.date.toLocaleDateString('tr-TR')
+                ).map(d => ({ ...d, type: 'İdrar' }));
+
+                // Her kayıt için bir satır ekle
+                [...waterEntries, ...urineEntries].forEach(entry => {
+                    const row = tbody.insertRow();
+                    
+                    // Tarih ve saat formatını düzelt
+                    const formattedDate = entry.time.toLocaleDateString('tr-TR');
+                    const formattedTime = entry.time.toLocaleTimeString('tr-TR');
+                    
+                    row.insertCell(0).textContent = formattedDate;
+                    row.insertCell(1).textContent = entry.type === 'Su' ? `${entry.amount} ml` : '-';
+                    row.insertCell(2).textContent = entry.type === 'İdrar' ? `${entry.amount} ml` : '-';
+                    row.insertCell(3).textContent = `${day.water - day.urine} ml`;
+
+                    // Silme butonu ekle
+                    const deleteCell = row.insertCell(4);
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Sil';
+                    deleteBtn.className = 'delete-btn';
+                    
+                    console.log('Silme butonu için veriler:', { 
+                        formattedDate, 
+                        formattedTime,
+                        type: entry.type
+                    });
+                    
+                    deleteBtn.onclick = () => deleteEntry(formattedDate, formattedTime, entry.type);
+                    deleteCell.appendChild(deleteBtn);
+                });
             });
         }
 
