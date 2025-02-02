@@ -6,7 +6,11 @@ const path = require('path');
 const net = require('net');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: ['http://localhost:3000', 'https://muhittinuzun.github.io'],
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.static('.'));
 
