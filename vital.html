@@ -373,6 +373,10 @@
     </table>
 
     <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3000'
+            : 'https://hasta-takip-production.up.railway.app'; // Railway URL'iniz
+
         // Global değişkeni tanımla
         let vitalData = [];
 
@@ -493,7 +497,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/vital', {
+                const response = await fetch(`${API_URL}/api/vital`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -538,7 +542,7 @@
         // Verileri yükleme fonksiyonu
         async function loadData() {
             try {
-                const response = await fetch('http://localhost:3000/api/vital');
+                const response = await fetch(`${API_URL}/api/vital`);
                 const data = await response.json();
                 
                 vitalData = data.map(row => ({
@@ -573,7 +577,7 @@
 
                 console.log('Düzeltilmiş tarih ve saat:', { formattedDate, formattedTime });
 
-                const response = await fetch('http://localhost:3000/api/vital', {
+                const response = await fetch(`${API_URL}/api/vital`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'

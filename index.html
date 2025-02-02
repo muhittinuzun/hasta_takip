@@ -349,7 +349,9 @@
         // Global değişkenler
         let waterData = [];
         let urineData = [];
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKoOktkxY82mjU7zkSFqlqtLqSK-XXeNHNlwOfHUsApvQAwxV6-MGqWpTO86UMKrHc/exec';
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3000'
+            : 'https://hasta-takip-production.up.railway.app'; // Railway URL'iniz
 
         window.onload = function() {
             loadData();
@@ -360,7 +362,7 @@
         // Veri ekleme fonksiyonu
         async function addEntry(amount, type) {
             try {
-                const response = await fetch('http://localhost:3000/api/sivi', {
+                const response = await fetch(`${API_URL}/api/sivi`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -381,7 +383,7 @@
         // Verileri yükleme fonksiyonu
         async function loadData() {
             try {
-                const response = await fetch('http://localhost:3000/api/sivi');
+                const response = await fetch(`${API_URL}/api/sivi`);
                 const data = await response.json();
                 
                 // Verileri Su ve İdrar olarak ayır
@@ -454,7 +456,7 @@
 
                 console.log('Düzeltilmiş tarih ve saat:', { formattedDate, formattedTime, type });
 
-                const response = await fetch('http://localhost:3000/api/sivi', {
+                const response = await fetch(`${API_URL}/api/sivi`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
