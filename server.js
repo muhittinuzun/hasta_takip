@@ -7,7 +7,11 @@ const net = require('net');
 
 const app = express();
 const corsOptions = {
-    origin: ['http://localhost:3000', 'https://muhittinuzun.github.io'],
+    origin: [
+        'http://localhost:3000',
+        'https://muhittinuzun.github.io',
+        'https://hastatakip-production.up.railway.app'
+    ],
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
