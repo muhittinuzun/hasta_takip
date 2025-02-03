@@ -300,6 +300,31 @@
         .data-table.totals tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+
+        .view-toggle {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-toggle button {
+            padding: 10px 20px;
+            border: 2px solid #4CAF50;
+            background: white;
+            color: #4CAF50;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .view-toggle button.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .data-table td {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -332,17 +357,39 @@
         <button onclick="filterData()">Filtrele</button>
     </div>
 
-    <table class="data-table totals">
+    <div class="view-toggle">
+        <button onclick="showDailyView()" class="active">Günlük Özet</button>
+        <button onclick="showDetailedView()">Detaylı Görünüm</button>
+    </div>
+
+    <table class="data-table" id="dailyTable">
         <thead>
             <tr>
                 <th>Tarih</th>
-                <th>Su (ml)</th>
-                <th>İdrar (ml)</th>
-                <th>Fark (ml)</th>
+                <th>Günlük Toplam Su</th>
+                <th>Günlük Toplam İdrar</th>
+                <th>Günlük Fark</th>
+                <th>24 Saat Hedef</th>
                 <th>İşlem</th>
             </tr>
         </thead>
-        <tbody id="dataTableBody"></tbody>
+        <tbody id="dailyTableBody"></tbody>
+    </table>
+
+    <table class="data-table" id="detailedTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Saat</th>
+                <th>İşlem</th>
+                <th>Miktar</th>
+                <th>Günlük Toplam Su</th>
+                <th>Günlük Toplam İdrar</th>
+                <th>Anlık Fark</th>
+                <th>İşlem</th>
+            </tr>
+        </thead>
+        <tbody id="detailedTableBody"></tbody>
     </table>
 
     <script>
@@ -352,6 +399,8 @@
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:3000'
             : 'https://hastatakip-production.up.railway.app'; // Railway URL'iniz
+
+        let currentView = 'daily'; // 'daily' veya 'detailed'
 
         window.onload = function() {
             loadData();
@@ -484,90 +533,146 @@
             }
         }
 
+        // Günlük toplamları hesapla
+        function getDailyTotals() {
+            // Tarihleri grupla
+            const dailyData = new Map();
+
+            // Su verilerini grupla
+            waterData.forEach(entry => {
+                const dateStr = entry.time.toLocaleDateString('tr-TR');
+                if (!dailyData.has(dateStr)) {
+                    dailyData.set(dateStr, {
+                        date: entry.time,
+                        water: 0,
+                        urine: 0
+                    });
+                }
+                dailyData.get(dateStr).water += entry.amount;
+            });
+
+            // İdrar verilerini grupla
+            urineData.forEach(entry => {
+                const dateStr = entry.time.toLocaleDateString('tr-TR');
+                if (!dailyData.has(dateStr)) {
+                    dailyData.set(dateStr, {
+                        date: entry.time,
+                        water: 0,
+                        urine: 0
+                    });
+                }
+                dailyData.get(dateStr).urine += entry.amount;
+            });
+
+            // Map'i array'e çevir ve tarihe göre sırala
+            return Array.from(dailyData.values())
+                .sort((a, b) => b.date - a.date);
+        }
+
+        // Tabloyu güncelle
         function updateTable() {
-            const tbody = document.getElementById('dataTableBody');
+            if (currentView === 'daily') {
+                updateDailyTable();
+            } else {
+                updateDetailedTable();
+            }
+        }
+
+        function updateDailyTable() {
+            const tbody = document.getElementById('dailyTableBody');
             tbody.innerHTML = '';
 
             const dailyData = getDailyTotals();
-
-            if (dailyData.length === 0) {
-                const row = tbody.insertRow();
-                const cell = row.insertCell(0);
-                cell.colSpan = 5;
-                cell.textContent = 'Henüz kayıt bulunmuyor';
-                cell.style.textAlign = 'center';
-                return;
-            }
-
+            
             dailyData.forEach(day => {
-                // Su ve İdrar kayıtlarını ayrı ayrı bul
-                const waterEntries = waterData.filter(d => 
-                    d.time.toLocaleDateString('tr-TR') === day.date.toLocaleDateString('tr-TR')
-                ).map(d => ({ ...d, type: 'Su' }));
-
-                const urineEntries = urineData.filter(d => 
-                    d.time.toLocaleDateString('tr-TR') === day.date.toLocaleDateString('tr-TR')
-                ).map(d => ({ ...d, type: 'İdrar' }));
-
-                // Her kayıt için bir satır ekle
-                [...waterEntries, ...urineEntries].forEach(entry => {
-                    const row = tbody.insertRow();
-                    
-                    // Tarih ve saat formatını düzelt
-                    const formattedDate = entry.time.toLocaleDateString('tr-TR');
-                    const formattedTime = entry.time.toLocaleTimeString('tr-TR');
-                    
-                    row.insertCell(0).textContent = formattedDate;
-                    row.insertCell(1).textContent = entry.type === 'Su' ? `${entry.amount} ml` : '-';
-                    row.insertCell(2).textContent = entry.type === 'İdrar' ? `${entry.amount} ml` : '-';
-                    row.insertCell(3).textContent = `${day.water - day.urine} ml`;
-
-                    // Silme butonu ekle
-                    const deleteCell = row.insertCell(4);
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Sil';
-                    deleteBtn.className = 'delete-btn';
-                    
-                    console.log('Silme butonu için veriler:', { 
-                        formattedDate, 
-                        formattedTime,
-                        type: entry.type
-                    });
-                    
-                    deleteBtn.onclick = () => deleteEntry(formattedDate, formattedTime, entry.type);
-                    deleteCell.appendChild(deleteBtn);
-                });
+                const row = tbody.insertRow();
+                
+                // Tarih
+                row.insertCell(0).textContent = day.date.toLocaleDateString('tr-TR');
+                
+                // Günlük Toplam Su
+                row.insertCell(1).textContent = `${day.water} ml`;
+                
+                // Günlük Toplam İdrar
+                row.insertCell(2).textContent = `${day.urine} ml`;
+                
+                // Günlük Fark
+                const balance = day.water - day.urine;
+                const balanceCell = row.insertCell(3);
+                balanceCell.textContent = `${balance} ml`;
+                balanceCell.style.color = balance >= 0 ? 'green' : 'red';
+                
+                // 24 Saat Hedef
+                const targetCell = row.insertCell(4);
+                const target = 2000; // Günlük hedef (ml)
+                const remaining = target - day.water;
+                targetCell.textContent = remaining > 0 ? `${remaining} ml kaldı` : 'Hedef Tamamlandı!';
+                targetCell.style.color = remaining > 0 ? 'orange' : 'green';
+                
+                // İşlem butonu
+                addActionButtons(row.insertCell(5), day);
             });
         }
 
-        function getDailyTotals() {
-            const dailyTotals = {};
+        function updateDetailedTable() {
+            const tbody = document.getElementById('detailedTableBody');
+            tbody.innerHTML = '';
 
-            waterData.forEach(data => {
-                const dateStr = data.time.toLocaleDateString('tr-TR');
-                if (!dailyTotals[dateStr]) {
-                    dailyTotals[dateStr] = {
-                        date: data.time,
-                        water: 0,
-                        urine: 0
-                    };
+            // Tüm kayıtları birleştir ve sırala
+            const allEntries = [
+                ...waterData.map(entry => ({...entry, type: 'Su'})),
+                ...urineData.map(entry => ({...entry, type: 'İdrar'}))
+            ].sort((a, b) => b.time - a.time);
+
+            let currentDate = '';
+            let dailyWater = 0;
+            let dailyUrine = 0;
+
+            allEntries.forEach(entry => {
+                const row = tbody.insertRow();
+                const dateStr = entry.time.toLocaleDateString('tr-TR');
+                
+                // Yeni gün başladığında sayaçları sıfırla
+                if (dateStr !== currentDate) {
+                    currentDate = dateStr;
+                    dailyWater = 0;
+                    dailyUrine = 0;
                 }
-                dailyTotals[dateStr].water += data.amount;
-            });
 
-            urineData.forEach(data => {
-                const dateStr = data.time.toLocaleDateString('tr-TR');
-                if (!dailyTotals[dateStr]) {
-                    dailyTotals[dateStr] = {
-                        date: data.time,
-                        water: 0,
-                        urine: 0
-                    };
+                // Günlük toplamları güncelle
+                if (entry.type === 'Su') {
+                    dailyWater += entry.amount;
+                } else {
+                    dailyUrine += entry.amount;
                 }
-                dailyTotals[dateStr].urine += data.amount;
-            });
 
-            return Object.values(dailyTotals).sort((a, b) => b.date - a.date);
+                // Tarih
+                row.insertCell(0).textContent = dateStr;
+                
+                // Saat
+                row.insertCell(1).textContent = entry.time.toLocaleTimeString('tr-TR');
+                
+                // İşlem Türü
+                row.insertCell(2).textContent = entry.type;
+                
+                // Miktar
+                row.insertCell(3).textContent = `${entry.amount} ml`;
+                
+                // Günlük Toplam Su
+                row.insertCell(4).textContent = `${dailyWater} ml`;
+                
+                // Günlük Toplam İdrar
+                row.insertCell(5).textContent = `${dailyUrine} ml`;
+                
+                // Anlık Fark
+                const balance = dailyWater - dailyUrine;
+                const balanceCell = row.insertCell(6);
+                balanceCell.textContent = `${balance} ml`;
+                balanceCell.style.color = balance >= 0 ? 'green' : 'red';
+                
+                // Silme butonu
+                addDeleteButton(row.insertCell(7), entry);
+            });
         }
 
         function setDefaultDates() {
@@ -578,6 +683,80 @@
 
         function filterData() {
             updateTable();
+        }
+
+        function showDailyView() {
+            currentView = 'daily';
+            document.getElementById('dailyTable').style.display = 'table';
+            document.getElementById('detailedTable').style.display = 'none';
+            document.querySelector('button[onclick="showDailyView()"]').classList.add('active');
+            document.querySelector('button[onclick="showDetailedView()"]').classList.remove('active');
+            updateTable();
+        }
+
+        function showDetailedView() {
+            currentView = 'detailed';
+            document.getElementById('dailyTable').style.display = 'none';
+            document.getElementById('detailedTable').style.display = 'table';
+            document.querySelector('button[onclick="showDailyView()"]').classList.remove('active');
+            document.querySelector('button[onclick="showDetailedView()"]').classList.add('active');
+            updateTable();
+        }
+
+        // Günlük silme butonları için
+        function addActionButtons(cell, day) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Sil';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => {
+                if (confirm(`${day.date.toLocaleDateString('tr-TR')} tarihine ait tüm kayıtları silmek istediğinizden emin misiniz?`)) {
+                    const dateStr = day.date.toLocaleDateString('tr-TR');
+                    const waterPromises = waterData
+                        .filter(d => d.time.toLocaleDateString('tr-TR') === dateStr)
+                        .map(d => deleteEntry(
+                            d.time.toLocaleDateString('tr-TR'),
+                            d.time.toLocaleTimeString('tr-TR'),
+                            'Su'
+                        ));
+                    
+                    const urinePromises = urineData
+                        .filter(d => d.time.toLocaleDateString('tr-TR') === dateStr)
+                        .map(d => deleteEntry(
+                            d.time.toLocaleDateString('tr-TR'),
+                            d.time.toLocaleTimeString('tr-TR'),
+                            'İdrar'
+                        ));
+
+                    Promise.all([...waterPromises, ...urinePromises])
+                        .then(() => loadData())
+                        .catch(error => {
+                            console.error('Silme hatası:', error);
+                            alert('Silme sırasında bir hata oluştu!');
+                        });
+                }
+            };
+            cell.appendChild(deleteBtn);
+        }
+
+        // Tekil kayıt silme butonu için
+        function addDeleteButton(cell, entry) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Sil';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => {
+                if (confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                    deleteEntry(
+                        entry.time.toLocaleDateString('tr-TR'),
+                        entry.time.toLocaleTimeString('tr-TR'),
+                        entry.type
+                    ).then(() => loadData())
+                    .catch(error => {
+                        console.error('Silme hatası:', error);
+                        alert('Silme sırasında bir hata oluştu!');
+                    });
+                }
+            };
+            cell.appendChild(deleteBtn);
         }
     </script>
 </body>
