@@ -657,16 +657,16 @@
             const tbody = document.getElementById('detailedTableBody');
             tbody.innerHTML = '';
 
-            // Tüm kayıtları birleştir ve sırala
+            // Tüm kayıtları birleştir ve tarihe göre ARTAN sırada sırala (eskiden yeniye)
             const allEntries = [
                 ...waterData.map(entry => ({...entry, type: 'Su'})),
                 ...urineData.map(entry => ({...entry, type: 'İdrar'}))
-            ].sort((a, b) => b.time - a.time);
+            ].sort((a, b) => a.time - b.time); // Eskiden yeniye sırala
 
             // Her tarih için toplamları tutan obje
             const dailyTotals = {};
 
-            // Önce tüm günlük toplamları hesapla
+            // Önce tüm günlük toplamları hesapla (eskiden yeniye)
             allEntries.forEach(entry => {
                 const dateStr = entry.time.toLocaleDateString('tr-TR');
                 if (!dailyTotals[dateStr]) {
@@ -680,7 +680,10 @@
                 }
             });
 
-            // Her kayıt için satır oluştur
+            // Görüntüleme için kayıtları yeniden AZALAN sırada sırala (yeniden eskiye)
+            allEntries.sort((a, b) => b.time - a.time);
+
+            // Her kayıt için satır oluştur (yeniden eskiye sıralı)
             allEntries.forEach(entry => {
                 const row = tbody.insertRow();
                 const dateStr = entry.time.toLocaleDateString('tr-TR');
@@ -691,7 +694,8 @@
                     date: dateStr,
                     type: entry.type,
                     amount: entry.amount,
-                    dailyTotals: totals
+                    dailyTotals: totals,
+                    time: entry.time.toLocaleTimeString('tr-TR')
                 });
 
                 row.insertCell(0).textContent = dateStr;
