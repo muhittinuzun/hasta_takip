@@ -44,7 +44,7 @@
             background-color: #4CAF50;
         }
 
-        .input-group {
+        .input-container, .filter-container {
             margin: 20px 0;
             padding: 20px;
             background-color: #f8f9fa;
@@ -52,114 +52,136 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .input-field {
-            margin-bottom: 20px;
+        .input-grid, .filter-grid {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
-        .input-field label {
-            display: block;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #333;
+        .input-group, .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label, .filter-group label {
             font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
         }
 
-        .input-field input {
+        input[type="number"],
+        input[type="text"],
+        input[type="date"] {
             width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
+            padding: 12px;
+            font-size: 1rem;
             border: 2px solid #ddd;
             border-radius: 8px;
-            margin-bottom: 5px;
+            background: white;
         }
 
-        .input-field input:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }
-
-        button {
+        .submit-button, .filter-button {
             width: 100%;
-            padding: 18px;
-            font-size: 1.2rem;
-            background-color: #4CAF50;
-            color: white;
+            padding: 15px;
+            font-size: 1rem;
             border: none;
             border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
             cursor: pointer;
             margin-top: 10px;
-            transition: background-color 0.3s;
         }
 
-        button:hover {
-            background-color: #45a049;
+        .filter-button {
+            background-color: #2196F3;
         }
 
-        .filter-group {
-            margin: 20px 0;
-            padding: 20px;
-            background-color: #e8f5e9;
-            border-radius: 12px;
+        .data-table {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .filter-group input[type="date"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin: 10px 0;
+        .data-table th,
+        .data-table td {
+            padding: 12px 8px;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 0.9rem;
         }
 
-        .chart-container {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .data-table th {
+            background-color: #4CAF50;
+            color: white;
+            position: sticky;
+            top: 0;
         }
 
-        /* Tablet ve masaüstü için düzenlemeler */
+        .delete-btn {
+            padding: 8px 12px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Tablet ve masaüstü için grid düzeni */
         @media (min-width: 768px) {
-            body {
-                padding: 20px;
-            }
-
-            .input-group {
-                display: grid;
+            .input-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
-
-            .filter-group {
-                display: flex;
-                align-items: center;
-                gap: 20px;
-            }
-
-            .filter-group input[type="date"] {
-                width: auto;
-                flex: 1;
-            }
-
-            button {
-                transition: transform 0.2s;
-            }
-
-            button:hover {
-                transform: translateY(-2px);
-            }
-        }
-
-        /* Dokunmatik cihazlar için optimizasyonlar */
-        @media (hover: none) {
-            button {
-                padding: 20px;
             }
             
-            input {
-                padding: 20px !important;
+            .filter-grid {
+                grid-template-columns: repeat(3, 1fr);
+                align-items: end;
+            }
+        }
+
+        /* Geniş ekranlar için */
+        @media (min-width: 1024px) {
+            .input-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Mobil cihazlar için optimizasyonlar */
+        @media (max-width: 767px) {
+            .input-grid, .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            input[type="number"],
+            input[type="text"],
+            input[type="date"],
+            .submit-button,
+            .filter-button {
+                min-height: 48px;
+            }
+
+            .data-table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .data-table th,
+            .data-table td {
+                min-width: 100px;
+            }
+        }
+
+        /* Dokunmatik cihazlar için ek optimizasyon */
+        @media (hover: none) {
+            .submit-button:active,
+            .filter-button:active,
+            .delete-btn:active {
+                opacity: 0.8;
             }
         }
 
@@ -265,33 +287,8 @@
             margin-right: 5px;
         }
 
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
-        .edit-btn:hover {
-            background-color: #1976D2;
-        }
-
         .delete-btn:hover {
             background-color: #D32F2F;
-        }
-
-        @media (max-width: 768px) {
-            .edit-btn, .delete-btn {
-                padding: 10px;
-                width: 100%;
-                margin: 2px 0;
-            }
-
-            .data-table {
-                font-size: 0.9rem;
-            }
-
-            .data-table td, .data-table th {
-                padding: 10px;
-            }
         }
 
         .data-table td:nth-last-child(-n+2) {
@@ -320,42 +317,46 @@
 
     <h1>Vital Bulgu Takibi</h1>
 
-    <div class="input-group">
-        <div class="input-field">
-            <label for="systolic">Büyük Tansiyon (Sistolik)</label>
-            <input type="number" id="systolic" min="0" max="300" placeholder="Örn: 120">
+    <div class="input-container">
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="systolic">Sistolik (Büyük Tansiyon)</label>
+                <input type="number" id="systolic" placeholder="Sistolik değer">
+            </div>
+            
+            <div class="input-group">
+                <label for="diastolic">Diastolik (Küçük Tansiyon)</label>
+                <input type="number" id="diastolic" placeholder="Diastolik değer">
+            </div>
+            
+            <div class="input-group">
+                <label for="pulse">Nabız</label>
+                <input type="number" id="pulse" placeholder="Nabız değeri">
+            </div>
+            
+            <div class="input-group">
+                <label for="notes">Notlar</label>
+                <input type="text" id="notes" placeholder="Varsa notlarınız">
+            </div>
         </div>
         
-        <div class="input-field">
-            <label for="diastolic">Küçük Tansiyon (Diastolik)</label>
-            <input type="number" id="diastolic" min="0" max="200" placeholder="Örn: 80">
-        </div>
-        
-        <div class="input-field">
-            <label for="pulse">Nabız (Atım/dk)</label>
-            <input type="number" id="pulse" min="0" max="200" placeholder="Örn: 75">
-        </div>
-
-        <div class="input-field">
-            <label for="notes">Açıklama</label>
-            <textarea id="notes" placeholder="Varsa notlarınızı buraya yazın..."></textarea>
-        </div>
-        
-        <button onclick="addVitalSigns()">KAYDET</button>
+        <button onclick="addVitalSigns()" class="submit-button">KAYDET</button>
     </div>
 
-    <div class="filter-group">
-        <div class="input-field">
-            <label for="startDate">Başlangıç Tarihi</label>
-            <input type="date" id="startDate">
+    <div class="filter-container">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="startDate">Başlangıç Tarihi</label>
+                <input type="date" id="startDate">
+            </div>
+            
+            <div class="filter-group">
+                <label for="endDate">Bitiş Tarihi</label>
+                <input type="date" id="endDate">
+            </div>
+            
+            <button onclick="filterData()" class="filter-button">FİLTRELE</button>
         </div>
-        
-        <div class="input-field">
-            <label for="endDate">Bitiş Tarihi</label>
-            <input type="date" id="endDate">
-        </div>
-        
-        <button onclick="filterData()">FİLTRELE</button>
     </div>
 
     <table class="data-table">
