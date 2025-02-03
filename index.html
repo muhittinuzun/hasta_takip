@@ -647,21 +647,39 @@
                 ...urineData.map(entry => ({...entry, type: 'İdrar'}))
             ].sort((a, b) => a.time - b.time); // Eskiden yeniye sırala
 
-            // Her tarih için toplamları tutan obje
-            const dailyTotals = {};
+            // Her tarih için birikimli toplamları tutan obje
+            const cumulativeTotals = {};
+            let currentDate = '';
+            let runningWaterTotal = 0;
+            let runningUrineTotal = 0;
 
-            // Önce tüm günlük toplamları hesapla (eskiden yeniye)
+            // Önce birikimli toplamları hesapla (eskiden yeniye)
             allEntries.forEach(entry => {
                 const dateStr = entry.time.toLocaleDateString('tr-TR');
-                if (!dailyTotals[dateStr]) {
-                    dailyTotals[dateStr] = { water: 0, urine: 0 };
-                }
                 
-                if (entry.type === 'Su') {
-                    dailyTotals[dateStr].water += entry.amount;
-                } else if (entry.type === 'İdrar') {
-                    dailyTotals[dateStr].urine += entry.amount;
+                // Yeni gün başladığında sayaçları sıfırla
+                if (dateStr !== currentDate) {
+                    currentDate = dateStr;
+                    runningWaterTotal = 0;
+                    runningUrineTotal = 0;
                 }
+
+                // Birikimli toplamları güncelle
+                if (entry.type === 'Su') {
+                    runningWaterTotal += entry.amount;
+                } else if (entry.type === 'İdrar') {
+                    runningUrineTotal += entry.amount;
+                }
+
+                // Her kayıt için o ana kadarki toplamları sakla
+                if (!cumulativeTotals[dateStr]) {
+                    cumulativeTotals[dateStr] = [];
+                }
+                cumulativeTotals[dateStr].push({
+                    time: entry.time,
+                    water: runningWaterTotal,
+                    urine: runningUrineTotal
+                });
             });
 
             // Görüntüleme için kayıtları yeniden AZALAN sırada sırala (yeniden eskiye)
@@ -671,15 +689,20 @@
             allEntries.forEach(entry => {
                 const row = tbody.insertRow();
                 const dateStr = entry.time.toLocaleDateString('tr-TR');
-                const totals = dailyTotals[dateStr];
+                
+                // Bu kayıt için birikimli toplamları bul
+                const totals = cumulativeTotals[dateStr].find(t => 
+                    t.time.getTime() === entry.time.getTime()
+                );
 
                 // Debug için
                 console.log('Entry:', {
                     date: dateStr,
+                    time: entry.time.toLocaleTimeString('tr-TR'),
                     type: entry.type,
                     amount: entry.amount,
-                    dailyTotals: totals,
-                    time: entry.time.toLocaleTimeString('tr-TR')
+                    cumulativeWater: totals.water,
+                    cumulativeUrine: totals.urine
                 });
 
                 row.insertCell(0).textContent = dateStr;
