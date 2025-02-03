@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const net = require('net');
+const moment = require('moment-timezone');
 
 const app = express();
 
@@ -57,6 +58,9 @@ db.serialize(() => {
     )`);
 });
 
+// Varsayılan zaman dilimini Türkiye olarak ayarla
+moment.tz.setDefault('Europe/Istanbul');
+
 // API Routes
 app.route('/api/sivi')
     .get((req, res) => {
@@ -72,11 +76,10 @@ app.route('/api/sivi')
     .post((req, res) => {
         const { amount, type } = req.body;
         
-        // Türkiye saat diliminde tarih ve saat al
-        const now = new Date();
-        const trTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 için
-        const tarih = trTime.toLocaleDateString('tr-TR');
-        const saat = trTime.toLocaleTimeString('tr-TR');
+        // Türkiye saatini al
+        const now = moment();
+        const tarih = now.format('DD.MM.YYYY');
+        const saat = now.format('HH:mm:ss');
 
         db.run(
             'INSERT INTO sivi_takip (tarih, saat, tur, miktar) VALUES (?, ?, ?, ?)',
@@ -165,11 +168,10 @@ app.route('/api/vital')
     .post((req, res) => {
         const { systolic, diastolic, pulse, notes } = req.body;
         
-        // Türkiye saat diliminde tarih ve saat al
-        const now = new Date();
-        const trTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 için
-        const tarih = trTime.toLocaleDateString('tr-TR');
-        const saat = trTime.toLocaleTimeString('tr-TR');
+        // Türkiye saatini al
+        const now = moment();
+        const tarih = now.format('DD.MM.YYYY');
+        const saat = now.format('HH:mm:ss');
 
         db.run(
             'INSERT INTO vital_takip (tarih, saat, sistolik, diastolik, nabiz, notlar) VALUES (?, ?, ?, ?, ?, ?)',
