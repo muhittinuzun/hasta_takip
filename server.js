@@ -6,30 +6,22 @@ const path = require('path');
 const net = require('net');
 
 const app = express();
-const corsOptions = {
-    origin: [
-        'http://localhost:3000',
-        'https://muhittinuzun.github.io',
-        'https://hastatakip-production.up.railway.app'
-    ],
+
+// Basit CORS ayarı
+app.use(cors({
+    origin: '*',  // Tüm domainlerden gelen isteklere izin ver
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'],
-    credentials: true,
-    optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+    allowedHeaders: ['Content-Type']
+}));
+
 app.use(bodyParser.json());
 app.use(express.static('.'));
 
-// Preflight istekleri için OPTIONS endpoint'i
-app.options('*', cors(corsOptions));
-
-// CORS headers'ı her response için ekle
+// Her isteğe CORS header'larını ekle
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://muhittinuzun.github.io');
+    res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
-    res.header('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
