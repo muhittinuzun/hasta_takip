@@ -78,12 +78,14 @@ app.route('/api/sivi')
     .post((req, res) => {
         const { amount, type } = req.body;
         
-        // Türkiye saatini al
-        const now = moment();
-        console.log('Server TZ:', process.env.TZ);
-        console.log('Current time:', now.format('HH:mm:ss'));
-        const tarih = now.format('DD.MM.YYYY');
-        const saat = now.format('HH:mm:ss');
+        // Şu anki zamanı al ve 3 saat ekle
+        const now = new Date();
+        now.setHours(now.getHours() + 3);
+        
+        const tarih = now.toLocaleDateString('tr-TR');
+        const saat = now.toLocaleTimeString('tr-TR');
+
+        console.log('Kaydedilen zaman:', { tarih, saat }); // Debug için
 
         db.run(
             'INSERT INTO sivi_takip (tarih, saat, tur, miktar) VALUES (?, ?, ?, ?)',
@@ -172,11 +174,14 @@ app.route('/api/vital')
     .post((req, res) => {
         const { systolic, diastolic, pulse, notes } = req.body;
         
-        // Türkiye saatini al
-        const now = moment().tz('Europe/Istanbul');
-        console.log('Şu anki saat (Türkiye):', now.format('HH:mm:ss')); // Debug için
-        const tarih = now.format('DD.MM.YYYY');
-        const saat = now.format('HH:mm:ss');
+        // Şu anki zamanı al ve 3 saat ekle
+        const now = new Date();
+        now.setHours(now.getHours() + 3);
+        
+        const tarih = now.toLocaleDateString('tr-TR');
+        const saat = now.toLocaleTimeString('tr-TR');
+
+        console.log('Kaydedilen zaman:', { tarih, saat }); // Debug için
 
         db.run(
             'INSERT INTO vital_takip (tarih, saat, sistolik, diastolik, nabiz, notlar) VALUES (?, ?, ?, ?, ?, ?)',
