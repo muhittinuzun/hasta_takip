@@ -71,8 +71,12 @@ app.route('/api/sivi')
     })
     .post((req, res) => {
         const { amount, type } = req.body;
-        const tarih = new Date().toLocaleDateString();
-        const saat = new Date().toLocaleTimeString();
+        
+        // Türkiye saat diliminde tarih ve saat al
+        const now = new Date();
+        const trTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 için
+        const tarih = trTime.toLocaleDateString('tr-TR');
+        const saat = trTime.toLocaleTimeString('tr-TR');
 
         db.run(
             'INSERT INTO sivi_takip (tarih, saat, tur, miktar) VALUES (?, ?, ?, ?)',
@@ -160,8 +164,12 @@ app.route('/api/vital')
     })
     .post((req, res) => {
         const { systolic, diastolic, pulse, notes } = req.body;
-        const tarih = new Date().toLocaleDateString();
-        const saat = new Date().toLocaleTimeString();
+        
+        // Türkiye saat diliminde tarih ve saat al
+        const now = new Date();
+        const trTime = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // UTC+3 için
+        const tarih = trTime.toLocaleDateString('tr-TR');
+        const saat = trTime.toLocaleTimeString('tr-TR');
 
         db.run(
             'INSERT INTO vital_takip (tarih, saat, sistolik, diastolik, nabiz, notlar) VALUES (?, ?, ?, ?, ?, ?)',
