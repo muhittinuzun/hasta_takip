@@ -150,29 +150,82 @@
             }
         }
 
-        /* Mobil cihazlar için optimizasyonlar */
+        /* Mobil cihazlar için grid düzeni (küçük ekranlar) */
         @media (max-width: 767px) {
-            .input-grid, .filter-grid {
-                grid-template-columns: 1fr;
+            .input-grid {
+                grid-template-columns: repeat(2, 1fr); /* İkili görünüm */
+                gap: 10px;
+            }
+            
+            .filter-grid {
+                grid-template-columns: repeat(2, 1fr); /* İkili görünüm */
+                gap: 10px;
+            }
+
+            /* Notlar alanı tam genişlik olsun */
+            .input-group:last-child {
+                grid-column: 1 / -1;
+            }
+
+            /* Filtre butonu tam genişlik olsun */
+            .filter-grid button {
+                grid-column: 1 / -1;
+            }
+
+            /* Input alanları için daha kompakt görünüm */
+            .input-group label {
+                font-size: 0.85rem;
+                margin-bottom: 4px;
             }
 
             input[type="number"],
             input[type="text"],
-            input[type="date"],
-            .submit-button,
-            .filter-button {
-                min-height: 48px;
+            input[type="date"] {
+                padding: 8px;
+                font-size: 0.9rem;
             }
 
+            /* Butonlar için daha kompakt görünüm */
+            .submit-button,
+            .filter-button {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+
+            /* Tablo için yatay kaydırma */
             .data-table {
                 display: block;
-                width: 100%;
                 overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
             }
 
             .data-table th,
             .data-table td {
-                min-width: 100px;
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Çok küçük ekranlar için tek sütun */
+        @media (max-width: 380px) {
+            .input-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Orta boy ekranlar için */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .input-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Büyük ekranlar için */
+        @media (min-width: 1024px) {
+            .input-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
