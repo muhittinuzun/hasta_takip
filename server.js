@@ -12,11 +12,26 @@ const corsOptions = {
         'https://muhittinuzun.github.io',
         'https://hastatakip-production.up.railway.app'
     ],
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true,
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.static('.'));
+
+// Preflight istekleri için OPTIONS endpoint'i
+app.options('*', cors(corsOptions));
+
+// CORS headers'ı her response için ekle
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://muhittinuzun.github.io');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
 
 // Veritabanı bağlantısı
 const db = new sqlite3.Database('database.sqlite', (err) => {
