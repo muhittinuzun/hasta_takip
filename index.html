@@ -460,40 +460,24 @@
                 const response = await fetch(`${API_URL}/api/sivi`);
                 const data = await response.json();
                 
-                // Debug için
-                console.log('Gelen veriler:', data);
+                console.log('API\'den gelen ham veriler:', data); // Debug log
 
                 waterData = data
                     .filter(row => row.tur === 'Su')
-                    .map(row => {
-                        // Tarih ve saat string'lerini düzgün formatta birleştir
-                        const [day, month, year] = row.tarih.split('.');
-                        const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${row.saat}`;
-                        console.log('Oluşturulan tarih:', dateStr);
-                        
-                        return {
-                            time: new Date(dateStr),
-                            amount: row.miktar,
-                            originalDate: row.tarih,
-                            originalTime: row.saat
-                        };
-                    });
+                    .map(row => ({
+                        time: new Date(`${row.tarih} ${row.saat}`),
+                        amount: row.miktar
+                    }));
 
                 urineData = data
                     .filter(row => row.tur === 'İdrar')
-                    .map(row => {
-                        const [day, month, year] = row.tarih.split('.');
-                        const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${row.saat}`;
-                        
-                        return {
-                            time: new Date(dateStr),
-                            amount: row.miktar,
-                            originalDate: row.tarih,
-                            originalTime: row.saat
-                        };
-                    });
+                    .map(row => ({
+                        time: new Date(`${row.tarih} ${row.saat}`),
+                        amount: row.miktar
+                    }));
 
-                console.log('İşlenmiş veriler:', { waterData, urineData });
+                console.log('İşlenmiş veriler:', { waterData, urineData }); // Debug log
+                
                 updateTable();
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
