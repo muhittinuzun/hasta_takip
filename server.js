@@ -58,8 +58,10 @@ db.serialize(() => {
     )`);
 });
 
-// Varsayılan zaman dilimini Türkiye olarak ayarla
+// Moment ayarları
+process.env.TZ = 'Europe/Istanbul';
 moment.tz.setDefault('Europe/Istanbul');
+moment.locale('tr');
 
 // API Routes
 app.route('/api/sivi')
@@ -78,6 +80,8 @@ app.route('/api/sivi')
         
         // Türkiye saatini al
         const now = moment();
+        console.log('Server TZ:', process.env.TZ);
+        console.log('Current time:', now.format('HH:mm:ss'));
         const tarih = now.format('DD.MM.YYYY');
         const saat = now.format('HH:mm:ss');
 
@@ -169,7 +173,8 @@ app.route('/api/vital')
         const { systolic, diastolic, pulse, notes } = req.body;
         
         // Türkiye saatini al
-        const now = moment();
+        const now = moment().tz('Europe/Istanbul');
+        console.log('Şu anki saat (Türkiye):', now.format('HH:mm:ss')); // Debug için
         const tarih = now.format('DD.MM.YYYY');
         const saat = now.format('HH:mm:ss');
 

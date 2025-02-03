@@ -667,35 +667,32 @@
                 // Günlük toplamları güncelle
                 if (entry.type === 'Su') {
                     dailyWater += entry.amount;
-                } else {
+                } else if (entry.type === 'İdrar') {
                     dailyUrine += entry.amount;
                 }
 
-                // Tarih
+                // Hata ayıklama için log
+                console.log('Entry:', {
+                    date: dateStr,
+                    type: entry.type,
+                    amount: entry.amount,
+                    dailyWater,
+                    dailyUrine
+                });
+
+                // Satır verilerini doldur
                 row.insertCell(0).textContent = dateStr;
-                
-                // Saat
                 row.insertCell(1).textContent = entry.time.toLocaleTimeString('tr-TR');
-                
-                // İşlem Türü
                 row.insertCell(2).textContent = entry.type;
-                
-                // Miktar
                 row.insertCell(3).textContent = `${entry.amount} ml`;
-                
-                // Günlük Toplam Su
                 row.insertCell(4).textContent = `${dailyWater} ml`;
-                
-                // Günlük Toplam İdrar
                 row.insertCell(5).textContent = `${dailyUrine} ml`;
                 
-                // Anlık Fark
                 const balance = dailyWater - dailyUrine;
                 const balanceCell = row.insertCell(6);
                 balanceCell.textContent = `${balance} ml`;
                 balanceCell.style.color = balance >= 0 ? 'green' : 'red';
                 
-                // Silme butonu
                 addDeleteButton(row.insertCell(7), entry);
             });
         }
