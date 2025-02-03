@@ -63,6 +63,17 @@ process.env.TZ = 'Europe/Istanbul';
 moment.tz.setDefault('Europe/Istanbul');
 moment.locale('tr');
 
+function adjustDateTime(date) {
+    // 3 saat ekle
+    date.setHours(date.getHours() + 3);
+    
+    // Tarih ve saati Türkçe formatında döndür
+    const tarih = date.toLocaleDateString('tr-TR');
+    const saat = date.toLocaleTimeString('tr-TR');
+    
+    return { tarih, saat };
+}
+
 // API Routes
 app.route('/api/sivi')
     .get((req, res) => {
@@ -78,12 +89,9 @@ app.route('/api/sivi')
     .post((req, res) => {
         const { amount, type } = req.body;
         
-        // Şu anki zamanı al ve 3 saat ekle
+        // Şu anki zamanı al ve düzelt
         const now = new Date();
-        now.setHours(now.getHours() + 3);
-        
-        const tarih = now.toLocaleDateString('tr-TR');
-        const saat = now.toLocaleTimeString('tr-TR');
+        const { tarih, saat } = adjustDateTime(now);
 
         console.log('Kaydedilen zaman:', { tarih, saat }); // Debug için
 
@@ -174,12 +182,9 @@ app.route('/api/vital')
     .post((req, res) => {
         const { systolic, diastolic, pulse, notes } = req.body;
         
-        // Şu anki zamanı al ve 3 saat ekle
+        // Şu anki zamanı al ve düzelt
         const now = new Date();
-        now.setHours(now.getHours() + 3);
-        
-        const tarih = now.toLocaleDateString('tr-TR');
-        const saat = now.toLocaleTimeString('tr-TR');
+        const { tarih, saat } = adjustDateTime(now);
 
         console.log('Kaydedilen zaman:', { tarih, saat }); // Debug için
 

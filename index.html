@@ -460,29 +460,43 @@
                 const response = await fetch(`${API_URL}/api/sivi`);
                 const data = await response.json();
                 
-                // Verileri Su ve İdrar olarak ayır
+                // Debug için
+                console.log('Gelen veriler:', data);
+
                 waterData = data
                     .filter(row => row.tur === 'Su')
-                    .map(row => ({
-                        time: new Date(`${row.tarih} ${row.saat}`),
-                        amount: row.miktar,
-                        type: 'Su'  // type ekle
-                    }));
+                    .map(row => {
+                        // Tarih ve saat string'lerini düzgün formatta birleştir
+                        const [day, month, year] = row.tarih.split('.');
+                        const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${row.saat}`;
+                        console.log('Oluşturulan tarih:', dateStr);
+                        
+                        return {
+                            time: new Date(dateStr),
+                            amount: row.miktar,
+                            originalDate: row.tarih,
+                            originalTime: row.saat
+                        };
+                    });
 
                 urineData = data
                     .filter(row => row.tur === 'İdrar')
-                    .map(row => ({
-                        time: new Date(`${row.tarih} ${row.saat}`),
-                        amount: row.miktar,
-                        type: 'İdrar'  // type ekle
-                    }));
+                    .map(row => {
+                        const [day, month, year] = row.tarih.split('.');
+                        const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${row.saat}`;
+                        
+                        return {
+                            time: new Date(dateStr),
+                            amount: row.miktar,
+                            originalDate: row.tarih,
+                            originalTime: row.saat
+                        };
+                    });
 
+                console.log('İşlenmiş veriler:', { waterData, urineData });
                 updateTable();
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
-                waterData = [];
-                urineData = [];
-                updateTable();
             }
         }
 
@@ -649,46 +663,45 @@
                 ...urineData.map(entry => ({...entry, type: 'İdrar'}))
             ].sort((a, b) => b.time - a.time);
 
-            let currentDate = '';
-            let dailyWater = 0;
-            let dailyUrine = 0;
+            // Her tarih için toplamları tutan obje
+            const dailyTotals = {};
 
+            // Önce tüm günlük toplamları hesapla
+            allEntries.forEach(entry => {
+                const dateStr = entry.time.toLocaleDateString('tr-TR');
+                if (!dailyTotals[dateStr]) {
+                    dailyTotals[dateStr] = { water: 0, urine: 0 };
+                }
+                
+                if (entry.type === 'Su') {
+                    dailyTotals[dateStr].water += entry.amount;
+                } else if (entry.type === 'İdrar') {
+                    dailyTotals[dateStr].urine += entry.amount;
+                }
+            });
+
+            // Her kayıt için satır oluştur
             allEntries.forEach(entry => {
                 const row = tbody.insertRow();
                 const dateStr = entry.time.toLocaleDateString('tr-TR');
-                
-                // Yeni gün başladığında sayaçları sıfırla
-                if (dateStr !== currentDate) {
-                    currentDate = dateStr;
-                    dailyWater = 0;
-                    dailyUrine = 0;
-                }
+                const totals = dailyTotals[dateStr];
 
-                // Günlük toplamları güncelle
-                if (entry.type === 'Su') {
-                    dailyWater += entry.amount;
-                } else if (entry.type === 'İdrar') {
-                    dailyUrine += entry.amount;
-                }
-
-                // Hata ayıklama için log
+                // Debug için
                 console.log('Entry:', {
                     date: dateStr,
                     type: entry.type,
                     amount: entry.amount,
-                    dailyWater,
-                    dailyUrine
+                    dailyTotals: totals
                 });
 
-                // Satır verilerini doldur
                 row.insertCell(0).textContent = dateStr;
                 row.insertCell(1).textContent = entry.time.toLocaleTimeString('tr-TR');
                 row.insertCell(2).textContent = entry.type;
                 row.insertCell(3).textContent = `${entry.amount} ml`;
-                row.insertCell(4).textContent = `${dailyWater} ml`;
-                row.insertCell(5).textContent = `${dailyUrine} ml`;
+                row.insertCell(4).textContent = `${totals.water} ml`;
+                row.insertCell(5).textContent = `${totals.urine} ml`;
                 
-                const balance = dailyWater - dailyUrine;
+                const balance = totals.water - totals.urine;
                 const balanceCell = row.insertCell(6);
                 balanceCell.textContent = `${balance} ml`;
                 balanceCell.style.color = balance >= 0 ? 'green' : 'red';
