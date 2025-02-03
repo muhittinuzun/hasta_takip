@@ -45,41 +45,84 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .input-row {
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
+        .input-grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: 1fr;
         }
 
         .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-with-button input {
             flex: 1;
             min-width: 0;
-        }
-
-        .water-input, .urine-input {
-            display: flex;
-            gap: 5px;
-        }
-
-        .water-input input, .urine-input input {
-            flex: 1;
-            min-width: 80px;
-            max-width: 120px;
-            padding: 8px;
-            font-size: 0.9rem;
+            padding: 12px;
+            font-size: 1rem;
             border: 2px solid #ddd;
             border-radius: 8px;
         }
 
-        .water-input button, .urine-input button {
-            padding: 8px 12px;
-            font-size: 0.9rem;
+        .input-with-button button {
+            padding: 12px 20px;
             white-space: nowrap;
+            font-size: 0.9rem;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
             background-color: #4CAF50;
             color: white;
+            cursor: pointer;
+        }
+
+        .input-with-button .urine-button {
+            background-color: #2196F3;
+        }
+
+        /* Tablet ve masaüstü için grid düzeni */
+        @media (min-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Mobil cihazlar için büyük dokunmatik alanlar */
+        @media (max-width: 767px) {
+            .input-with-button {
+                flex-direction: column;
+            }
+
+            .input-with-button input,
+            .input-with-button button {
+                width: 100%;
+                padding: 15px;
+                font-size: 1rem;
+            }
+
+            .input-group label {
+                font-size: 1rem;
+            }
+        }
+
+        /* Dokunmatik cihazlar için ek optimizasyon */
+        @media (hover: none) {
+            .input-with-button input,
+            .input-with-button button {
+                min-height: 48px; /* Minimum dokunmatik alan */
+            }
         }
 
         input[type="number"] {
@@ -99,11 +142,6 @@
             border-radius: 8px;
             cursor: pointer;
             min-width: 120px;
-        }
-
-        .urine-button {
-            width: 100%;
-            background-color: #2196F3;
         }
 
         .filter-group {
@@ -161,16 +199,6 @@
             }
         }
 
-        @media (hover: none) {
-            button {
-                padding: 20px;
-            }
-            
-            input {
-                padding: 20px !important;
-            }
-        }
-
         /* Tablo butonları için stiller */
         .edit-btn, .delete-btn {
             padding: 8px 12px;
@@ -208,21 +236,16 @@
                 margin: 2px 0;
             }
 
-            .input-row {
-                flex-direction: row;
-                flex-wrap: nowrap;
+            .input-grid {
+                flex-direction: column;
             }
             
-            .water-input, .urine-input {
-            width: 100%;
-            }
-            
-            .water-input input, .urine-input input {
+            .input-with-button input {
                 min-width: 60px;
                 font-size: 0.85rem;
             }
 
-            .water-input button, .urine-input button {
+            .input-with-button button {
                 padding: 8px 10px;
                 font-size: 0.85rem;
             }
@@ -334,19 +357,21 @@
     </div>
 
     <div class="input-container">
-        <div class="input-row">
+        <div class="input-grid">
             <div class="input-group">
-                <div class="water-input">
-                    <input type="number" id="waterAmount" placeholder="Su (ml)" min="0">
-                    <button onclick="addWater()">Ekle</button>
+                <label>Su Girişi (ml)</label>
+                <div class="input-with-button">
+                    <input type="number" id="waterAmount" placeholder="Su miktarı">
+                    <button onclick="addWater()">EKLE</button>
                 </div>
             </div>
-
+            
             <div class="input-group">
-                <div class="urine-input">
-                    <input type="number" id="urineAmount" placeholder="İdrar (ml)" min="0">
-                    <button onclick="addUrine()">Ekle</button>
-            </div>
+                <label>İdrar Girişi (ml)</label>
+                <div class="input-with-button">
+                    <input type="number" id="urineAmount" placeholder="İdrar miktarı">
+                    <button onclick="addUrine()" class="urine-button">EKLE</button>
+                </div>
             </div>
         </div>
     </div>
